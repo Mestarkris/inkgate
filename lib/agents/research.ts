@@ -31,13 +31,20 @@ async function getLivePrice(topic: string): Promise<string> {
     const json = await res.json();
     const t = json.data?.[0];
     if (!t) return "";
+    const price = Number(t.last);
+    const open = Number(t.open24h);
+    const high = Number(t.high24h);
+    const low = Number(t.low24h);
+    const change = ((price - open) / open * 100).toFixed(2);
+    const volume = Number(t.volCcy24h).toLocaleString();
+
     return (
-      "Live OKX Market API data: " +
-      map[key] +
-      " price = $" + Number(t.last).toLocaleString() +
-      " | 24h high = $" + Number(t.high24h).toLocaleString() +
-      " | 24h low = $" + Number(t.low24h).toLocaleString() +
-      " | 24h volume = $" + Number(t.volCcy24h).toLocaleString()
+      "Live OKX Market API data for " + map[key] + ": " +
+      "Current price = $" + price.toLocaleString() +
+      " | 24h change = " + change + "%" +
+      " | 24h high = $" + high.toLocaleString() +
+      " | 24h low = $" + low.toLocaleString() +
+      " | 24h volume = " + volume + " " + map[key].split("-")[1]
     );
   } catch {
     return "";
