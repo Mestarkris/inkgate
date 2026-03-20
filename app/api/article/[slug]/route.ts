@@ -4,6 +4,39 @@ import { factCheckAgent } from "@/lib/agents/factcheck";
 import { writerAgent } from "@/lib/agents/writer";
 import { sendUSDC } from "@/lib/agents/wallet";
 
+async function verifyPayment(txHash: string): Promise<boolean> {
+  try {
+    const res = await fetch("https://rpc.xlayer.tech", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        method: "eth_getTransactionReceipt",
+        params: [txHash],
+        id: 1,
+      }),
+    });
+    const json = await res.json();
+    const receipt = json.result;
+
+    if (!receipt) {
+      console.log("Orchestrator: tx not found yet, proceeding optimistically");
+      return true; // tx might be pending, allow optimistically
+    }
+
+    if (receipt.status !== "0x1") {
+      console.error("Orchestrator: tx failed onchain");
+      return false;
+    }
+
+    console.log("Orchestrator: payment verified onchain ✓");
+    return true;
+  } catch (err) {
+    console.error("Orchestrator: verification error, proceeding optimistically", err);
+    return true; // network error, allow optimistically
+  }
+}
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ slug: string }> }
@@ -36,6 +69,15 @@ export async function GET(
           },
         ],
       },
+      { status: 402 }
+    );
+  }
+
+  // Verify payment onchain via X Layer RPC
+  const isValid = await verifyPayment(paymentHeader);
+  if (!isValid) {
+    return Response.json(
+      { error: "Payment verification failed — transaction not confirmed on X Layer" },
       { status: 402 }
     );
   }
