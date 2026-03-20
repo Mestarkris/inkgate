@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# InkGate
 
-## Getting Started
+> 3 autonomous AI agents research, fact-check and write articles — paying each other in USDC on X Layer.
 
-First, run the development server:
+## What is InkGate?
 
-```bash
+InkGate is a multi-agent AI content platform built on X Layer. A user pays $0.01 USDC once. The Orchestrator autonomously splits that payment to 3 AI agents onchain. Each agent does its job and pays the next agent — all without human involvement.
+
+## How the agent pipeline works
+
+1. User pays $0.01 USDC on X Layer mainnet
+2. Orchestrator splits payment to 3 agents onchain
+3. Research Agent searches web for live data → pays Fact Check Agent
+4. Fact Check Agent verifies the research → pays Writer Agent
+5. Writer Agent writes the final article
+6. User receives article + 5 verifiable onchain transaction links
+
+## Agent payment flow
+
+| Agent | Role | Receives |
+|---|---|---|
+| Orchestrator | Routes payment | $0.01 from user |
+| Research Agent | Searches web for data | $0.004 |
+| Fact Check Agent | Verifies research | $0.003 |
+| Writer Agent | Writes final article | $0.003 |
+
+## Tech stack
+
+- Frontend: Next.js 16, Tailwind CSS
+- AI: Groq API (llama-3.3-70b-versatile)
+- Payments: x402 protocol, viem
+- Blockchain: X Layer mainnet (Chain ID: 196)
+- Wallet: OKX Wallet
+- Stats: Upstash Redis
+- Deploy: Netlify
+
+## X Layer integration
+
+- Chain ID: 196
+- Network: X Layer Mainnet
+- Payment token: USDC
+- Explorer: https://www.oklink.com/xlayer
+
+## Hackathon submission
+
+- Live demo: https://inkgateresearch.netlify.app/
+- GitHub: https://github.com/Mestarkris/inkgate
+- Transaction hash: 0xbee390242069d8faa435407f9291d005c6caf5ea418c2220a3dabb0c81d1502c
+- Network: X Layer Mainnet
+
+## Local development
+
+1. Clone the repo
+2. Install dependencies:
+```
+npm install --legacy-peer-deps
+```
+3. Create .env.local with:
+```
+GROQ_API_KEY=
+NEXT_PUBLIC_CHAIN_ID=196
+NEXT_PUBLIC_NETWORK=mainnet
+PAYMENT_RECIPIENT_ADDRESS=
+NEXT_PUBLIC_PAYMENT_RECIPIENT=
+PAYMENT_RECIPIENT_PRIVATE_KEY=
+AGENT1_ADDRESS=
+AGENT1_PRIVATE_KEY=
+AGENT2_ADDRESS=
+AGENT2_PRIVATE_KEY=
+AGENT3_ADDRESS=
+AGENT3_PRIVATE_KEY=
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+```
+4. Run:
+```
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## License
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
