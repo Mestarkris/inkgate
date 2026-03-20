@@ -106,6 +106,16 @@ export default function Home() {
           </div>
         </Link>
 
+        <Link href="/chat" style={{ textDecoration: "none" }}>
+          <div style={{ background: "#12121e", border: "1px solid #6366f1", borderRadius: 16, padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", marginBottom: 12 }} onMouseEnter={(e) => (e.currentTarget.style.background = "#1a1a2e")} onMouseLeave={(e) => (e.currentTarget.style.background = "#12121e")}>
+            <div>
+              <p style={{ fontSize: 16, fontWeight: 700, color: "#e8e8f0", marginBottom: 4 }}>Agent Chat</p>
+              <p style={{ fontSize: 13, color: "#6b7280" }}>Talk to any agent · Pay per message · Agent tips you back</p>
+            </div>
+            <div style={{ background: "#6366f1", color: "#fff", fontSize: 13, fontWeight: 600, padding: "8px 20px", borderRadius: 10, whiteSpace: "nowrap", marginLeft: 16 }}>Chat</div>
+          </div>
+        </Link>
+
         <Link href="/agents" style={{ textDecoration: "none" }}>
           <div style={{ background: "#12121e", border: "1px solid #1e1e2e", borderRadius: 16, padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", marginBottom: 12 }} onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#6366f1")} onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#1e1e2e")}>
             <div>
