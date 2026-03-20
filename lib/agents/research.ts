@@ -26,25 +26,23 @@ async function getLivePrice(topic: string): Promise<string> {
 
   try {
     const res = await fetch(
-      "https://www.okx.com/api/v5/market/ticker?instId=" + map[key]
+      "https://www.okx.com/api/v5/market/index-tickers?instId=" + map[key]
     );
     const json = await res.json();
     const t = json.data?.[0];
     if (!t) return "";
-    const price = Number(t.last);
+    const price = Number(t.idxPx);
     const open = Number(t.open24h);
     const high = Number(t.high24h);
     const low = Number(t.low24h);
     const change = ((price - open) / open * 100).toFixed(2);
-    const volume = Number(t.volCcy24h).toLocaleString();
 
     return (
-      "Live OKX Market API data for " + map[key] + ": " +
+      "Live OKX Index price for " + map[key] + ": " +
       "Current price = $" + price.toLocaleString() +
       " | 24h change = " + change + "%" +
       " | 24h high = $" + high.toLocaleString() +
-      " | 24h low = $" + low.toLocaleString() +
-      " | 24h volume = " + volume + " " + map[key].split("-")[1]
+      " | 24h low = $" + low.toLocaleString()
     );
   } catch {
     return "";
