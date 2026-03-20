@@ -1,256 +1,203 @@
 "use client";
-import { useState, use, useEffect } from "react";
-import { useAccount } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { getArticle } from "@/lib/articles";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { articles } from "@/lib/articles";
 
-export default function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = use(params);
-  const article = getArticle(slug);
-  const [content, setContent] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [txHash, setTxHash] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [teaser, setTeaser] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [agentPipeline, setAgentPipeline] = useState<any>(null);
-  const [nftTx, setNftTx] = useState<string | null>(null);
-  const { isConnected } = useAccount();
+const categories = [
+  { label: "All", value: "all" },
+  { label: "Bitcoin", value: "bitcoin" },
+  { label: "DeFi", value: "defi" },
+  { label: "AI", value: "ai" },
+  { label: "Regulation", value: "regulation" },
+];
+
+export default function Home() {
+  const [stats, setStats] = useState({ totalSales: 0, totalEarned: "0.00" });
+  const [filter, setFilter] = useState("all");
 
   useEffect(() => {
-    setMounted(true);
-    fetch("/api/teaser/" + slug)
+    fetch("/api/stats")
       .then((r) => r.json())
-      .then((d) => setTeaser(d.teaser))
+      .then((d) => setStats(d))
       .catch(() => {});
-  }, [slug]);
+  }, []);
 
-  if (!article) {
-    return (
-      <div style={{ minHeight: "100vh", background: "#0a0a0f", color: "#e8e8f0", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p>Article not found</p>
-      </div>
-    );
-  }
-
-  async function unlock() {
-    setLoading(true);
-    setError(null);
-    try {
-      const { createWalletClient, custom, defineChain, parseUnits } = await import("viem");
-      const xlayer = defineChain({
-        id: 196,
-        name: "X Layer",
-        nativeCurrency: { name: "OKB", symbol: "OKB", decimals: 18 },
-        rpcUrls: { default: { http: ["https://rpc.xlayer.tech"] } },
-      });
-      const walletClient = createWalletClient({
-        chain: xlayer,
-        transport: custom(window.ethereum),
-      });
-      await window.ethereum.request({ method: "eth_requestAccounts" });
-      const accounts = await window.ethereum.request({ method: "eth_accounts" }) as string[];
-      const address = accounts[0] as `0x${string}`;
-      const USDC_ADDRESS = "0x74b7F16337b8972027F6196A17a631aC6dE26d22" as `0x${string}`;
-      const RECIPIENT = process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT as `0x${string}`;
-      const AMOUNT = parseUnits("0.01", 6);
-      const paddedRecipient = RECIPIENT.slice(2).padStart(64, "0");
-      const paddedAmount = AMOUNT.toString(16).padStart(64, "0");
-      const transferData = ("0xa9059cbb" + paddedRecipient + paddedAmount) as `0x${string}`;
-      const hash = await walletClient.sendTransaction({
-        account: address,
-        to: USDC_ADDRESS,
-        data: transferData,
-        chain: xlayer,
-      });
-      const response = await fetch("/api/article/" + slug, {
-        method: "GET",
-        headers: {
-          "X-PAYMENT": hash,
-          "X-READER-ADDRESS": address,
-        },
-      });
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error("Error " + response.status + ": " + text);
-      }
-      const data = await response.json();
-      setContent(data.content);
-      setTxHash(hash);
-      if (data.agentPipeline) setAgentPipeline(data.agentPipeline);
-      if (data.nftTx) setNftTx(data.nftTx);
-    } catch (err: any) {
-      console.error("Full error:", err);
-      setError(err.message ?? "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function copyHash() {
-    if (!txHash) return;
-    navigator.clipboard.writeText(txHash);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
-  function renderTxBox() {
-    if (!txHash) return null;
-    const oklink = "https://www.oklink.com/xlayer/tx/";
-    return (
-      <div style={{ marginTop: 48, background: "#0d1f13", border: "1px solid #166534", borderRadius: 16, padding: 20 }}>
-        <p style={{ fontSize: 13, fontWeight: 600, color: "#22c55e", marginBottom: 16 }}>
-          Multi-agent pipeline complete
-        </p>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ background: "#0a0a0f", borderRadius: 8, padding: 12 }}>
-            <p style={{ fontSize: 11, color: "#6b7280", marginBottom: 4 }}>User payment</p>
-            <a href={oklink + txHash} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "#4ade80", wordBreak: "break-all", fontFamily: "monospace", textDecoration: "none" }}>
-              {txHash.slice(0, 20) + "..."}
-            </a>
-          </div>
-          {agentPipeline && (
-            <>
-              <div style={{ background: "#0a0a0f", borderRadius: 8, padding: 12 }}>
-                <p style={{ fontSize: 11, color: "#6b7280", marginBottom: 4 }}>Orchestrator paid Research Agent ($0.004)</p>
-                <a href={oklink + agentPipeline.agent1Tx} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "#4ade80", wordBreak: "break-all", fontFamily: "monospace", textDecoration: "none" }}>
-                  {agentPipeline.agent1Tx.slice(0, 20) + "..."}
-                </a>
-              </div>
-              <div style={{ background: "#0a0a0f", borderRadius: 8, padding: 12 }}>
-                <p style={{ fontSize: 11, color: "#6b7280", marginBottom: 4 }}>Orchestrator paid Fact Check Agent ($0.003)</p>
-                <a href={oklink + agentPipeline.agent2Tx} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "#4ade80", wordBreak: "break-all", fontFamily: "monospace", textDecoration: "none" }}>
-                  {agentPipeline.agent2Tx.slice(0, 20) + "..."}
-                </a>
-              </div>
-              <div style={{ background: "#0a0a0f", borderRadius: 8, padding: 12 }}>
-                <p style={{ fontSize: 11, color: "#6b7280", marginBottom: 4 }}>Orchestrator paid Writer Agent ($0.003)</p>
-                <a href={oklink + agentPipeline.agent3Tx} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "#4ade80", wordBreak: "break-all", fontFamily: "monospace", textDecoration: "none" }}>
-                  {agentPipeline.agent3Tx.slice(0, 20) + "..."}
-                </a>
-              </div>
-              <div style={{ background: "#0a0a0f", borderRadius: 8, padding: 12 }}>
-                <p style={{ fontSize: 11, color: "#6b7280", marginBottom: 4 }}>Research Agent paid Fact Check Agent ($0.002)</p>
-                <a href={oklink + agentPipeline.researchTx} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "#4ade80", wordBreak: "break-all", fontFamily: "monospace", textDecoration: "none" }}>
-                  {agentPipeline.researchTx.slice(0, 20) + "..."}
-                </a>
-              </div>
-              <div style={{ background: "#0a0a0f", borderRadius: 8, padding: 12 }}>
-                <p style={{ fontSize: 11, color: "#6b7280", marginBottom: 4 }}>Fact Check Agent paid Writer Agent ($0.001)</p>
-                <a href={oklink + agentPipeline.factCheckTx} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "#4ade80", wordBreak: "break-all", fontFamily: "monospace", textDecoration: "none" }}>
-                  {agentPipeline.factCheckTx.slice(0, 20) + "..."}
-                </a>
-              </div>
-            </>
-          )}
-          {nftTx && (
-            <div style={{ background: "#0a0a0f", borderRadius: 8, padding: 12, border: "1px solid #6366f1" }}>
-              <p style={{ fontSize: 11, color: "#6366f1", marginBottom: 4 }}>Article NFT minted to your wallet</p>
-              <a href={oklink + nftTx} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "#818cf8", wordBreak: "break-all", fontFamily: "monospace", textDecoration: "none" }}>
-                {nftTx.slice(0, 20) + "..."}
-              </a>
-            </div>
-          )}
-        </div>
-        <button onClick={copyHash} style={{ marginTop: 12, fontSize: 12, background: "#1e1e2e", color: "#e8e8f0", padding: "6px 14px", borderRadius: 8, border: "1px solid #374151", cursor: "pointer" }}>
-          {copied ? "Copied!" : "Copy main TX hash"}
-        </button>
-      </div>
-    );
-  }
-
-  if (content) {
-    return (
-      <div style={{ minHeight: "100vh", background: "#0a0a0f", color: "#e8e8f0" }}>
-        <nav style={{ borderBottom: "1px solid #1e1e2e", padding: "16px 24px", display: "flex", alignItems: "center", gap: 16 }}>
-          <Link href="/" style={{ color: "#6b7280", textDecoration: "none", fontSize: 13 }}>Back</Link>
-          <span style={{ fontSize: 13, color: "#6366f1" }}>InkGate</span>
-        </nav>
-        <div style={{ maxWidth: 680, margin: "0 auto", padding: "48px 24px 80px" }}>
-          <h1 style={{ fontSize: 32, fontWeight: 800, lineHeight: 1.2, marginBottom: 32, color: "#e8e8f0" }}>
-            {article.title}
-          </h1>
-          <div style={{ fontSize: 16, lineHeight: 1.8, color: "#9ca3af" }}>
-            {content.split("\n").filter(p => p.trim()).map((para, i) => (
-              <p key={i} style={{ marginBottom: 20 }}>{para}</p>
-            ))}
-          </div>
-          {renderTxBox()}
-        </div>
-      </div>
-    );
-  }
+  const filtered = filter === "all"
+    ? articles
+    : articles.filter((a) => a.slug.includes(filter) || a.title.toLowerCase().includes(filter));
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0a0a0f", color: "#e8e8f0", display: "flex", flexDirection: "column" }}>
-      <nav style={{ borderBottom: "1px solid #1e1e2e", padding: "16px 24px", display: "flex", alignItems: "center", gap: 16 }}>
-        <Link href="/" style={{ color: "#6b7280", textDecoration: "none", fontSize: 13 }}>Back</Link>
-        <span style={{ fontSize: 13, color: "#6366f1" }}>InkGate</span>
-      </nav>
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
-        <div style={{ width: "100%", maxWidth: 440, background: "#12121e", border: "1px solid #1e1e2e", borderRadius: 24, padding: 32 }}>
-          {process.env.NEXT_PUBLIC_NETWORK !== "mainnet" && (
-            <div style={{ background: "#451a03", border: "1px solid #92400e", borderRadius: 10, padding: "8px 14px", fontSize: 12, color: "#fbbf24", marginBottom: 20, textAlign: "center" }}>
-              TESTNET MODE - transactions will not count for submission
-            </div>
-          )}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#6366f1" }}></div>
-            <span style={{ fontSize: 12, color: "#6b7280" }}>InkGate Research · 3 AI agents · Live data</span>
+    <div style={{ minHeight: "100vh", background: "#0a0a0f", color: "#e8e8f0" }}>
+
+      <nav style={{ borderBottom: "1px solid #1e1e2e", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: "#6366f1", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: "#fff", fontWeight: 700 }}>
+            I
           </div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, lineHeight: 1.3, marginBottom: 16, color: "#e8e8f0" }}>
-            {article.title}
-          </h1>
-          <div style={{ borderLeft: "2px solid #6366f1", paddingLeft: 14, marginBottom: 24 }}>
-            <p style={{ fontSize: 14, color: "#9ca3af", lineHeight: 1.6, fontStyle: "italic" }}>
-              {teaser ?? "Loading preview..."}
-            </p>
-          </div>
-          <div style={{ background: "#0a0a0f", borderRadius: 12, padding: 16, marginBottom: 16, textAlign: "center" }}>
-            <p style={{ fontSize: 36, fontWeight: 800, color: "#6366f1", marginBottom: 4 }}>$0.01</p>
-            <p style={{ fontSize: 12, color: "#4b5563" }}>USDC on X Layer · 0 gas fee · Instant</p>
-          </div>
-          <div style={{ background: "#0a0a0f", borderRadius: 12, padding: 12, marginBottom: 24 }}>
-            <p style={{ fontSize: 11, color: "#6b7280", marginBottom: 8 }}>What you get:</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
-                <span style={{ color: "#9ca3af" }}>AI-researched article</span>
-                <span style={{ color: "#22c55e" }}>included</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
-                <span style={{ color: "#9ca3af" }}>5 onchain agent payments</span>
-                <span style={{ color: "#22c55e" }}>included</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
-                <span style={{ color: "#9ca3af" }}>Article NFT in your wallet</span>
-                <span style={{ color: "#6366f1" }}>included</span>
-              </div>
-            </div>
-          </div>
-          {!mounted ? (
-            <div style={{ height: 48 }} />
-          ) : !isConnected ? (
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <ConnectButton label="Connect Wallet to Unlock" />
-            </div>
-          ) : (
-            <button
-              onClick={unlock}
-              disabled={loading}
-              style={{ width: "100%", padding: "14px", borderRadius: 12, border: "none", background: loading ? "#3730a3" : "#6366f1", color: "#fff", fontSize: 15, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer" }}
-            >
-              {loading ? "Agents working..." : "Pay $0.01 & Unlock + Mint NFT"}
-            </button>
-          )}
-          {error && (
-            <p style={{ fontSize: 13, color: "#f87171", marginTop: 12, textAlign: "center" }}>{error}</p>
-          )}
-          <p style={{ fontSize: 11, color: "#374151", marginTop: 16, textAlign: "center" }}>
-            Powered by x402 · X Layer · 3 onchain agents
-          </p>
+          <span style={{ fontWeight: 700, fontSize: 18, letterSpacing: "-0.5px" }}>InkGate</span>
         </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#12121e", border: "1px solid #1e1e2e", borderRadius: 20, padding: "6px 12px", fontSize: 12, color: "#6366f1" }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", display: "inline-block" }}></span>
+          X Layer Mainnet
+        </div>
+      </nav>
+
+      <div style={{ maxWidth: 860, margin: "0 auto", padding: "64px 24px 40px" }}>
+        <div style={{ display: "inline-block", background: "#12121e", border: "1px solid #6366f133", borderRadius: 20, padding: "4px 14px", fontSize: 12, color: "#818cf8", marginBottom: 20 }}>
+          Powered by x402 · OKX Market API · X Layer
+        </div>
+        <h1 style={{ fontSize: 48, fontWeight: 800, lineHeight: 1.1, letterSpacing: "-1.5px", marginBottom: 16, color: "#e8e8f0" }}>
+          AI research,<br />pay to unlock.
+        </h1>
+        <p style={{ color: "#6b7280", fontSize: 17, maxWidth: 480, lineHeight: 1.6 }}>
+          3 autonomous AI agents research, fact-check and write every article. Each agent gets paid onchain. $0.01 USDC. No account needed.
+        </p>
+
+        <div style={{ display: "flex", gap: 16, marginTop: 40, flexWrap: "wrap" }}>
+          <div style={{ background: "#12121e", border: "1px solid #1e1e2e", borderRadius: 16, padding: "20px 28px", minWidth: 140 }}>
+            <p style={{ fontSize: 32, fontWeight: 800, color: "#6366f1", marginBottom: 4 }}>{stats.totalSales}</p>
+            <p style={{ fontSize: 12, color: "#6b7280" }}>Articles unlocked</p>
+          </div>
+          <div style={{ background: "#12121e", border: "1px solid #1e1e2e", borderRadius: 16, padding: "20px 28px", minWidth: 140 }}>
+            <p style={{ fontSize: 32, fontWeight: 800, color: "#22c55e", marginBottom: 4 }}>${stats.totalEarned}</p>
+            <p style={{ fontSize: 12, color: "#6b7280" }}>USDC earned</p>
+          </div>
+          <div style={{ background: "#12121e", border: "1px solid #1e1e2e", borderRadius: 16, padding: "20px 28px", minWidth: 140 }}>
+            <p style={{ fontSize: 32, fontWeight: 800, color: "#f59e0b", marginBottom: 4 }}>{articles.length}</p>
+            <p style={{ fontSize: 12, color: "#6b7280" }}>Topics available</p>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 860, margin: "0 auto", padding: "0 24px 16px" }}>
+        <Link href="/custom" style={{ textDecoration: "none" }}>
+          <div
+            style={{ background: "#12121e", border: "1px solid #6366f1", borderRadius: 16, padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", marginBottom: 12 }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#1a1a2e")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "#12121e")}
+          >
+            <div>
+              <p style={{ fontSize: 16, fontWeight: 700, color: "#e8e8f0", marginBottom: 4 }}>Write about anything</p>
+              <p style={{ fontSize: 13, color: "#6b7280" }}>Submit any topic · 3 agents research it live · $0.01 USDC</p>
+            </div>
+            <div style={{ background: "#6366f1", color: "#fff", fontSize: 13, fontWeight: 600, padding: "8px 20px", borderRadius: 10, whiteSpace: "nowrap", marginLeft: 16 }}>
+              Try it
+            </div>
+          </div>
+        </Link>
+
+        <Link href="/trending" style={{ textDecoration: "none" }}>
+          <div
+            style={{ background: "#12121e", border: "1px solid #f59e0b", borderRadius: 16, padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", marginBottom: 12 }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#1a1a0e")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "#12121e")}
+          >
+            <div>
+              <p style={{ fontSize: 16, fontWeight: 700, color: "#e8e8f0", marginBottom: 4 }}>Trending topics</p>
+              <p style={{ fontSize: 13, color: "#6b7280" }}>Live OKX market data · Agents write what is moving now</p>
+            </div>
+            <div style={{ background: "#f59e0b", color: "#000", fontSize: 13, fontWeight: 600, padding: "8px 20px", borderRadius: 10, whiteSpace: "nowrap", marginLeft: 16 }}>
+              See trends
+            </div>
+          </div>
+        </Link>
+
+        <Link href="/debate" style={{ textDecoration: "none" }}>
+          <div
+            style={{ background: "#12121e", border: "1px solid #f87171", borderRadius: 16, padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", marginBottom: 12 }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#1a0e0e")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "#12121e")}
+          >
+            <div>
+              <p style={{ fontSize: 16, fontWeight: 700, color: "#e8e8f0", marginBottom: 4 }}>Agent Debate</p>
+              <p style={{ fontSize: 13, color: "#6b7280" }}>Bull vs Bear · Judge Agent decides · 4 onchain payments</p>
+            </div>
+            <div style={{ background: "#f87171", color: "#fff", fontSize: 13, fontWeight: 600, padding: "8px 20px", borderRadius: 10, whiteSpace: "nowrap", marginLeft: 16 }}>
+              Debate
+            </div>
+          </div>
+        </Link>
+      </div>
+
+      <div style={{ maxWidth: 860, margin: "0 auto", padding: "0 24px 32px" }}>
+        <div style={{ background: "#12121e", border: "1px solid #1e1e2e", borderRadius: 16, padding: "20px 24px" }}>
+          <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 16 }}>How the agent pipeline works</p>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div style={{ background: "#0a0a0f", borderRadius: 10, padding: "10px 16px", flex: 1, minWidth: 140 }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "#6366f1", marginBottom: 4 }}>Research Agent</p>
+              <p style={{ fontSize: 11, color: "#6b7280" }}>Pulls live OKX market data and researches topic</p>
+              <p style={{ fontSize: 12, color: "#22c55e", marginTop: 6 }}>earns $0.004</p>
+            </div>
+            <div style={{ background: "#0a0a0f", borderRadius: 10, padding: "10px 16px", flex: 1, minWidth: 140 }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "#6366f1", marginBottom: 4 }}>Fact Check Agent</p>
+              <p style={{ fontSize: 11, color: "#6b7280" }}>Verifies all research claims</p>
+              <p style={{ fontSize: 12, color: "#22c55e", marginTop: 6 }}>earns $0.003</p>
+            </div>
+            <div style={{ background: "#0a0a0f", borderRadius: 10, padding: "10px 16px", flex: 1, minWidth: 140 }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "#6366f1", marginBottom: 4 }}>Writer Agent</p>
+              <p style={{ fontSize: 11, color: "#6b7280" }}>Writes the final article</p>
+              <p style={{ fontSize: 12, color: "#22c55e", marginTop: 6 }}>earns $0.003</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 860, margin: "0 auto", padding: "0 24px 24px" }}>
+        <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 12 }}>Browse curated topics</p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {categories.map((cat) => (
+            <button
+              key={cat.value}
+              onClick={() => setFilter(cat.value)}
+              style={{
+                padding: "6px 16px",
+                borderRadius: 20,
+                border: filter === cat.value ? "1px solid #6366f1" : "1px solid #1e1e2e",
+                background: filter === cat.value ? "#6366f120" : "#12121e",
+                color: filter === cat.value ? "#818cf8" : "#6b7280",
+                fontSize: 13,
+                cursor: "pointer",
+              }}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 860, margin: "0 auto", padding: "0 24px 80px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))", gap: 16 }}>
+        {filtered.map((article, i) => (
+          <Link
+            key={article.slug}
+            href={"/article/" + article.slug}
+            style={{ textDecoration: "none" }}
+          >
+            <div
+              style={{ background: "#12121e", border: "1px solid #1e1e2e", borderRadius: 16, padding: "24px", cursor: "pointer", height: "100%" }}
+              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#6366f1")}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#1e1e2e")}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                <span style={{ fontSize: 11, color: "#6b7280", background: "#0a0a0f", border: "1px solid #1e1e2e", borderRadius: 12, padding: "2px 10px" }}>
+                  #{String(i + 1).padStart(2, "0")}
+                </span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#22c55e", background: "#22c55e15", border: "1px solid #22c55e30", borderRadius: 12, padding: "2px 10px" }}>
+                  $0.01
+                </span>
+              </div>
+              <h2 style={{ fontSize: 15, fontWeight: 600, color: "#e8e8f0", lineHeight: 1.4, marginBottom: 12 }}>
+                {article.title}
+              </h2>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#4b5563" }}>
+                <span>InkGate Research</span>
+                <span>·</span>
+                <span>3 agents</span>
+                <span>·</span>
+                <span>Live OKX data</span>
+              </div>
+            </div>
+          </Link>
+        ))}
       </div>
     </div>
   );
