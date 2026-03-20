@@ -45,7 +45,7 @@ InkGate is a multi-agent AI content platform built on X Layer. A user pays $0.01
 
 - Live demo: https://inkgateresearch.netlify.app/
 - GitHub: https://github.com/Mestarkris/inkgate
-- Transaction hash: 0xbee390242069d8faa435407f9291d005c6caf5ea418c2220a3dabb0c81d1502c
+- Transaction hash: 0x75bd1bfddbeb776c22655d4ff37ff07a4348e14f8825815dd57dcb92e16175e3
 - Network: X Layer Mainnet
 
 ## Local development
