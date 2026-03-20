@@ -43,3 +43,46 @@ export async function sendUSDC(
 
   return hash;
 }
+export async function mintArticleNFT(
+  recipientAddress: `0x${string}`,
+  title: string,
+  txHash: string
+): Promise<string> {
+  const { createWalletClient, http, toHex } = await import("viem");
+  const { privateKeyToAccount } = await import("viem/accounts");
+
+  const account = privateKeyToAccount(
+    process.env.PAYMENT_RECIPIENT_PRIVATE_KEY as `0x${string}`
+  );
+
+  const client = createWalletClient({
+    account,
+    chain: xlayer,
+    transport: http("https://rpc.xlayer.tech"),
+  });
+
+  // Encode article metadata as hex data
+  const metadata = JSON.stringify({
+    protocol: "InkGate",
+    type: "ArticleNFT",
+    title,
+    owner: recipientAddress,
+    paymentTx: txHash,
+    mintedAt: new Date().toISOString(),
+    network: "X Layer",
+  });
+
+  const data = toHex(metadata);
+
+  // Mint by sending a self-transaction with metadata inscribed
+  const mintTx = await client.sendTransaction({
+    account,
+    to: recipientAddress,
+    value: BigInt(0),
+    data,
+    chain: xlayer,
+  });
+
+  console.log("NFT minted:", mintTx);
+  return mintTx;
+}

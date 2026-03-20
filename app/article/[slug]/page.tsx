@@ -16,6 +16,7 @@ export default function ArticlePage({ params }: { params: Promise<{ slug: string
   const [copied, setCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [agentPipeline, setAgentPipeline] = useState<any>(null);
+  const [nftTx, setNftTx] = useState<string | null>(null);
   const { isConnected } = useAccount();
 
   useEffect(() => {
@@ -66,7 +67,10 @@ export default function ArticlePage({ params }: { params: Promise<{ slug: string
       });
       const response = await fetch("/api/article/" + slug, {
         method: "GET",
-        headers: { "X-PAYMENT": hash },
+        headers: {
+          "X-PAYMENT": hash,
+          "X-READER-ADDRESS": address,
+        },
       });
       if (!response.ok) {
         const text = await response.text();
@@ -76,6 +80,7 @@ export default function ArticlePage({ params }: { params: Promise<{ slug: string
       setContent(data.content);
       setTxHash(hash);
       if (data.agentPipeline) setAgentPipeline(data.agentPipeline);
+      if (data.nftTx) setNftTx(data.nftTx);
     } catch (err: any) {
       console.error("Full error:", err);
       setError(err.message ?? "Something went wrong");
@@ -140,6 +145,14 @@ export default function ArticlePage({ params }: { params: Promise<{ slug: string
               </div>
             </>
           )}
+          {nftTx && (
+            <div style={{ background: "#0a0a0f", borderRadius: 8, padding: 12, border: "1px solid #6366f1" }}>
+              <p style={{ fontSize: 11, color: "#6366f1", marginBottom: 4 }}>Article NFT minted to your wallet</p>
+              <a href={oklink + nftTx} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "#818cf8", wordBreak: "break-all", fontFamily: "monospace", textDecoration: "none" }}>
+                {nftTx.slice(0, 20) + "..."}
+              </a>
+            </div>
+          )}
         </div>
         <button onClick={copyHash} style={{ marginTop: 12, fontSize: 12, background: "#1e1e2e", color: "#e8e8f0", padding: "6px 14px", borderRadius: 8, border: "1px solid #374151", cursor: "pointer" }}>
           {copied ? "Copied!" : "Copy main TX hash"}
@@ -200,19 +213,19 @@ export default function ArticlePage({ params }: { params: Promise<{ slug: string
             <p style={{ fontSize: 12, color: "#4b5563" }}>USDC on X Layer · 0 gas fee · Instant</p>
           </div>
           <div style={{ background: "#0a0a0f", borderRadius: 12, padding: 12, marginBottom: 24 }}>
-            <p style={{ fontSize: 11, color: "#6b7280", marginBottom: 8 }}>3 autonomous agents get paid onchain:</p>
+            <p style={{ fontSize: 11, color: "#6b7280", marginBottom: 8 }}>What you get:</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
-                <span style={{ color: "#9ca3af" }}>Research Agent</span>
-                <span style={{ color: "#22c55e" }}>$0.004</span>
+                <span style={{ color: "#9ca3af" }}>AI-researched article</span>
+                <span style={{ color: "#22c55e" }}>included</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
-                <span style={{ color: "#9ca3af" }}>Fact Check Agent</span>
-                <span style={{ color: "#22c55e" }}>$0.003</span>
+                <span style={{ color: "#9ca3af" }}>5 onchain agent payments</span>
+                <span style={{ color: "#22c55e" }}>included</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
-                <span style={{ color: "#9ca3af" }}>Writer Agent</span>
-                <span style={{ color: "#22c55e" }}>$0.003</span>
+                <span style={{ color: "#9ca3af" }}>Article NFT in your wallet</span>
+                <span style={{ color: "#6366f1" }}>included</span>
               </div>
             </div>
           </div>
@@ -223,8 +236,12 @@ export default function ArticlePage({ params }: { params: Promise<{ slug: string
               <ConnectButton label="Connect Wallet to Unlock" />
             </div>
           ) : (
-            <button onClick={unlock} disabled={loading} style={{ width: "100%", padding: "14px", borderRadius: 12, border: "none", background: loading ? "#3730a3" : "#6366f1", color: "#fff", fontSize: 15, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer" }}>
-              {loading ? "Agents working..." : "Pay $0.01 & Unlock"}
+            <button
+              onClick={unlock}
+              disabled={loading}
+              style={{ width: "100%", padding: "14px", borderRadius: 12, border: "none", background: loading ? "#3730a3" : "#6366f1", color: "#fff", fontSize: 15, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer" }}
+            >
+              {loading ? "Agents working..." : "Pay $0.01 & Unlock + Mint NFT"}
             </button>
           )}
           {error && (

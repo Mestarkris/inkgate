@@ -118,13 +118,27 @@ export async function GET(
     const { article: content } = await writerAgent(topic, verifiedResearch);
 
     // Update stats
+    // Mint article NFT for the reader
+    let nftTx = null;
+    try {
+      const { mintArticleNFT } = await import("@/lib/agents/wallet");
+      const readerAddress = req.headers.get("X-READER-ADDRESS") as `0x${string}` | null;
+      if (readerAddress) {
+        nftTx = await mintArticleNFT(readerAddress, article.title, paymentHeader);
+        console.log("Article NFT minted:", nftTx);
+      }
+    } catch (err) {
+      console.error("NFT mint failed:", err);
+    }
+    
+    // Update stats
     await fetch(new URL("/api/stats", req.url), { method: "POST" }).catch(() => {});
-
     return Response.json(
       {
         title: article.title,
         content,
         generatedAt: new Date().toISOString(),
+         nftTx,
         agentPipeline: {
           orchestratorTx: paymentHeader,
           agent1Tx,
