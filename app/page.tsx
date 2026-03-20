@@ -105,6 +105,16 @@ export default function Home() {
             <div style={{ background: "#22c55e", color: "#000", fontSize: 13, fontWeight: 600, padding: "8px 20px", borderRadius: 10, whiteSpace: "nowrap", marginLeft: 16 }}>Predict</div>
           </div>
         </Link>
+
+        <Link href="/agents" style={{ textDecoration: "none" }}>
+          <div style={{ background: "#12121e", border: "1px solid #1e1e2e", borderRadius: 16, padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", marginBottom: 12 }} onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#6366f1")} onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#1e1e2e")}>
+            <div>
+              <p style={{ fontSize: 16, fontWeight: 700, color: "#e8e8f0", marginBottom: 4 }}>Agent Status</p>
+              <p style={{ fontSize: 13, color: "#6b7280" }}>Live agent wallets · Transaction history · X Layer mainnet</p>
+            </div>
+            <div style={{ background: "#1e1e2e", color: "#e8e8f0", fontSize: 13, fontWeight: 600, padding: "8px 20px", borderRadius: 10, whiteSpace: "nowrap", marginLeft: 16 }}>View agents</div>
+          </div>
+        </Link>
       </div>
 
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "0 24px 32px" }}>
