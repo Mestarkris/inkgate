@@ -98,12 +98,20 @@ const map: Record<string, string> = {
     const low = Number(t.low24h);
     const change = ((price - open) / open * 100).toFixed(2);
 
+    // Format price properly for small numbers
+    function formatPrice(p: number): string {
+      if (p < 0.0001) return p.toFixed(10).replace(/\.?0+$/, "");
+      if (p < 0.01) return p.toFixed(8).replace(/\.?0+$/, "");
+      if (p < 1) return p.toFixed(6).replace(/\.?0+$/, "");
+      return p.toLocaleString();
+    }
+
     return (
       "Live OKX Market data (" + new Date().toLocaleDateString() + "): " +
-      map[key] + " = $" + price.toLocaleString() +
+      map[key] + " = $" + formatPrice(price) +
       " | 24h change: " + change + "%" +
-      " | 24h high: $" + high.toLocaleString() +
-      " | 24h low: $" + low.toLocaleString()
+      " | 24h high: $" + formatPrice(high) +
+      " | 24h low: $" + formatPrice(low)
     );
   } catch {
     return "";

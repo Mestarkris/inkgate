@@ -103,14 +103,21 @@ async function getLivePrice(query: string): Promise<string> {
     const t = json.data?.[0];
     if (!t) return "";
 
-    const price = Number(t.last);
+   const price = Number(t.last);
     const open = Number(t.open24h);
     const change = ((price - open) / open * 100).toFixed(2);
 
-    return map[key] + " live price: $" + price.toLocaleString() +
+    function formatPrice(p: number): string {
+      if (p < 0.0001) return p.toFixed(10).replace(/\.?0+$/, "");
+      if (p < 0.01) return p.toFixed(8).replace(/\.?0+$/, "");
+      if (p < 1) return p.toFixed(6).replace(/\.?0+$/, "");
+      return p.toLocaleString();
+    }
+
+    return map[key] + " live price: $" + formatPrice(price) +
       " | 24h change: " + change + "%" +
-      " | 24h high: $" + Number(t.high24h).toLocaleString() +
-      " | 24h low: $" + Number(t.low24h).toLocaleString();
+      " | 24h high: $" + formatPrice(Number(t.high24h)) +
+      " | 24h low: $" + formatPrice(Number(t.low24h));
   } catch {
     return "";
   }
