@@ -15,6 +15,16 @@ const AGENT_KEYS: Record<string, string> = {
   writer: process.env.AGENT3_PRIVATE_KEY ?? "",
 };
 
+function formatPrice(p: number): string {
+  if (p === 0) return "0";
+  if (p < 0.000001) return p.toExponential(4);
+  if (p < 0.0001) return p.toFixed(10).replace(/0+$/, "").replace(/\.$/, "");
+  if (p < 0.01) return p.toFixed(8).replace(/0+$/, "").replace(/\.$/, "");
+  if (p < 1) return p.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
+  if (p < 1000) return p.toFixed(2);
+  return p.toLocaleString();
+}
+
 async function getLivePrice(query: string): Promise<string> {
   const map: Record<string, string> = {
     bitcoin: "BTC-USDT",
@@ -103,21 +113,18 @@ async function getLivePrice(query: string): Promise<string> {
     const t = json.data?.[0];
     if (!t) return "";
 
-   const price = Number(t.last);
+    const price = Number(t.last);
     const open = Number(t.open24h);
+    const high = Number(t.high24h);
+    const low = Number(t.low24h);
     const change = ((price - open) / open * 100).toFixed(2);
 
-    function formatPrice(p: number): string {
-      if (p < 0.0001) return p.toFixed(10).replace(/\.?0+$/, "");
-      if (p < 0.01) return p.toFixed(8).replace(/\.?0+$/, "");
-      if (p < 1) return p.toFixed(6).replace(/\.?0+$/, "");
-      return p.toLocaleString();
-    }
+    console.log("Live price fetched:", map[key], "=", price, "raw:", t.last);
 
     return map[key] + " live price: $" + formatPrice(price) +
       " | 24h change: " + change + "%" +
-      " | 24h high: $" + formatPrice(Number(t.high24h)) +
-      " | 24h low: $" + formatPrice(Number(t.low24h));
+      " | 24h high: $" + formatPrice(high) +
+      " | 24h low: $" + formatPrice(low);
   } catch {
     return "";
   }
