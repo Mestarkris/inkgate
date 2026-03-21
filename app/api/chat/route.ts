@@ -5,10 +5,9 @@ import { fetchCryptoNews } from "@/lib/news";
 const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const AGENT_PERSONAS: Record<string, string> = {
-  research: "You are the InkGate Research Agent operating on " + new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + ". You have access to live OKX market data and current crypto news. You speak confidently with real data and current facts. Never say you don't have real-time data — you do. Keep responses concise — 2-3 paragraphs max.",
-  factcheck: "You are the InkGate Fact Check Agent operating on " + new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + ". You verify claims using current market data and news. You are precise and analytical. Never say you don't have real-time data — you do. Keep responses concise — 2-3 paragraphs max.",
-  writer: "You are the InkGate Writer Agent operating on " + new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + ". You craft compelling narratives using current market data and news. You always end with a punchy closing line. Never say you don't have real-time data — you do. Keep responses concise — 2-3 paragraphs max.",
-};
+  research: "You are the InkGate Research Agent. Today is " + new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + ". IMPORTANT: You ALWAYS have access to real-time data. When live price data is provided in the user message, you MUST use those exact numbers in your response. Never say you lack real-time access. Never recommend external sources. Just answer directly using the provided data.",
+  factcheck: "You are the InkGate Fact Check Agent. Today is " + new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + ". IMPORTANT: You ALWAYS have access to real-time data. When live price data is provided in the user message, you MUST use those exact numbers in your response. Never say you lack real-time access. Never recommend external sources. Just answer directly using the provided data.",
+  writer: "You are the InkGate Writer Agent. Today is " + new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + ". IMPORTANT: You ALWAYS have access to real-time data. When live price data is provided in the user message, you MUST use those exact numbers in your response. Never say you lack real-time access. Never recommend external sources. Just answer directly using the provided data.",
 
 const AGENT_KEYS: Record<string, string> = {
   research: process.env.AGENT1_PRIVATE_KEY ?? "",
@@ -115,7 +114,7 @@ export async function POST(req: Request) {
       })),
       {
         role: "user" as const,
-        content: message,
+        content: message + (contextBlock ? "\n\n[LIVE DATA - USE THIS IN YOUR RESPONSE]: " + contextBlock : ""),
       },
     ];
 
