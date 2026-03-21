@@ -8,47 +8,55 @@ function sign(timestamp: string, method: string, path: string) {
     .digest("base64");
 }
 
-async function getWalletAssets(address: string) {
+function getHeaders(timestamp: string, path: string) {
+  return {
+    "OK-ACCESS-KEY": process.env.OKX_API_KEY!,
+    "OK-ACCESS-SIGN": sign(timestamp, "GET", path),
+    "OK-ACCESS-TIMESTAMP": timestamp,
+    "OK-ACCESS-PASSPHRASE": process.env.OKX_PASSPHRASE!,
+    "Content-Type": "application/json",
+  };
+}
+
+async function getTokenBalances(address: string) {
   const timestamp = new Date().toISOString();
   const path = "/api/v5/wallet/asset/wallet-all-token-assets?address=" + address + "&chains=196";
-  const sig = sign(timestamp, "GET", path);
-
   try {
     const res = await fetch("https://web3.okx.com" + path, {
       signal: AbortSignal.timeout(8000),
-      headers: {
-        "OK-ACCESS-KEY": process.env.OKX_API_KEY!,
-        "OK-ACCESS-SIGN": sig,
-        "OK-ACCESS-TIMESTAMP": timestamp,
-        "OK-ACCESS-PASSPHRASE": process.env.OKX_PASSPHRASE!,
-        "Content-Type": "application/json",
-      },
+      headers: getHeaders(timestamp, path),
     });
     return await res.json();
   } catch {
-    return { data: [] };
+    return { code: "error", data: [] };
   }
 }
 
-async function getWalletTransactions(address: string) {
+async function getTotalValue(address: string) {
   const timestamp = new Date().toISOString();
-  const path = "/api/v5/wallet/post-transaction/transactions-by-address?address=" + address + "&chains=196&limit=5";
-  const sig = sign(timestamp, "GET", path);
-
+  const path = "/api/v5/wallet/asset/total-value?address=" + address + "&chains=196&assetType=0";
   try {
     const res = await fetch("https://web3.okx.com" + path, {
       signal: AbortSignal.timeout(8000),
-      headers: {
-        "OK-ACCESS-KEY": process.env.OKX_API_KEY!,
-        "OK-ACCESS-SIGN": sig,
-        "OK-ACCESS-TIMESTAMP": timestamp,
-        "OK-ACCESS-PASSPHRASE": process.env.OKX_PASSPHRASE!,
-        "Content-Type": "application/json",
-      },
+      headers: getHeaders(timestamp, path),
     });
     return await res.json();
   } catch {
-    return { data: [] };
+    return { code: "error", data: [] };
+  }
+}
+
+async function getTransactionHistory(address: string) {
+  const timestamp = new Date().toISOString();
+  const path = "/api/v5/wallet/post-transaction/transactions-by-address?address=" + address + "&chains=196&limit=10";
+  try {
+    const res = await fetch("https://web3.okx.com" + path, {
+      signal: AbortSignal.timeout(8000),
+      headers: getHeaders(timestamp, path),
+    });
+    return await res.json();
+  } catch {
+    return { code: "error", data: [] };
   }
 }
 
@@ -60,32 +68,41 @@ export async function GET(req: Request) {
     return Response.json({ error: "Address required" }, { status: 400 });
   }
 
-  try {
-    const [assets, transactions] = await Promise.all([
-      getWalletAssets(address),
-      getWalletTransactions(address),
-    ]);
+  const [balances, totalValue, transactions] = await Promise.all([
+    getTokenBalances(address),
+    getTotalValue(address),
+    getTransactionHistory(address),
+  ]);
 
-    // Extract USDC balance
-    const usdcBalance = assets.data?.[0]?.tokenAssets?.find(
-      (t: any) => t.symbol === "USDC"
-    )?.balance ?? "0";
+  console.log("OKX Wallet API raw responses:", {
+    balances: JSON.stringify(balances).slice(0, 200),
+    totalValue: JSON.stringify(totalValue).slice(0, 200),
+    transactions: JSON.stringify(transactions).slice(0, 200),
+  });
 
-    // Extract OKB balance
-    const okbBalance = assets.data?.[0]?.tokenAssets?.find(
-      (t: any) => t.symbol === "OKB"
-    )?.balance ?? "0";
+  const tokenList = balances.data?.[0]?.tokenAssets ?? [];
+  const usdcBalance = tokenList.find((t: any) =>
+    t.symbol === "USDC" || t.tokenContractAddress === "0x74b7F16337b8972027F6196A17a631aC6dE26d22"
+  )?.balance ?? "0";
+  const okbBalance = tokenList.find((t: any) => t.symbol === "OKB")?.balance ?? "0";
+  const totalValueUSD = totalValue.data?.[0]?.totalValue ?? "0";
+  const txList = transactions.data?.[0]?.transactions ?? [];
 
-    return Response.json({
-      address,
-      usdcBalance,
-      okbBalance,
-      totalTransactions: transactions.data?.[0]?.transactions?.length ?? 0,
-      assets: assets.data ?? [],
-      transactions: transactions.data ?? [],
-    });
-  } catch (err) {
-    console.error("Wallet API error:", err);
-    return Response.json({ error: "Wallet API failed" }, { status: 500 });
-  }
+  return Response.json({
+    address,
+    usdcBalance,
+    okbBalance,
+    totalValueUSD,
+    totalTransactions: txList.length,
+    recentTransactions: txList.slice(0, 5).map((tx: any) => ({
+      hash: tx.txHash,
+      type: tx.txStatus,
+      time: tx.txTime,
+    })),
+    raw: {
+      balancesCode: balances.code,
+      totalValueCode: totalValue.code,
+      transactionsCode: transactions.code,
+    },
+  });
 }
