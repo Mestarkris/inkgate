@@ -28,12 +28,22 @@ const AGENTS = [
 
 export default function AgentsPage() {
   const [stats, setStats] = useState({ totalSales: 0, totalEarned: "0.00" });
+  const [walletData, setWalletData] = useState<Record<string, any>>({});
 
   useEffect(() => {
     fetch("/api/stats")
       .then((r) => r.json())
       .then((d) => setStats(d))
       .catch(() => {});
+
+    AGENTS.forEach((agent) => {
+      if (agent.address) {
+        fetch("/api/wallet?address=" + agent.address)
+          .then((r) => r.json())
+          .then((d) => setWalletData(prev => ({ ...prev, [agent.address]: d })))
+          .catch(() => {});
+      }
+    });
   }, []);
 
   return (
@@ -45,11 +55,11 @@ export default function AgentsPage() {
 
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "48px 24px 80px" }}>
         <div style={{ display: "inline-block", background: "#22c55e20", border: "1px solid #22c55e33", borderRadius: 20, padding: "4px 14px", fontSize: 12, color: "#22c55e", marginBottom: 20 }}>
-          Live agent wallets on X Layer mainnet
+          Live agent wallets · Powered by OKX Wallet API
         </div>
         <h1 style={{ fontSize: 36, fontWeight: 800, marginBottom: 8, color: "#e8e8f0" }}>Agent Status</h1>
         <p style={{ fontSize: 15, color: "#6b7280", marginBottom: 40, lineHeight: 1.6 }}>
-          Every InkGate agent is a real autonomous wallet on X Layer. Each one earns and spends USDC independently. All transactions are publicly verifiable on OKLink.
+          Every InkGate agent is a real autonomous wallet on X Layer. Balances queried live via OKX Wallet API. All transactions publicly verifiable on OKLink.
         </p>
 
         <div style={{ display: "flex", gap: 16, marginBottom: 40, flexWrap: "wrap" }}>
@@ -70,6 +80,7 @@ export default function AgentsPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 40 }}>
           {AGENTS.map((agent, i) => {
             const oklinkBase = "https://www.oklink.com/xlayer/address/" + agent.address;
+            const wallet = walletData[agent.address];
             return (
               <div key={i} style={{ background: "#12121e", border: "1px solid #1e1e2e", borderRadius: 16, padding: 24 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
@@ -84,6 +95,28 @@ export default function AgentsPage() {
                   <div style={{ textAlign: "right" }}>
                     <p style={{ fontSize: 11, color: "#6b7280", marginBottom: 4 }}>Earns per article</p>
                     <p style={{ fontSize: 16, fontWeight: 700, color: agent.color }}>{agent.earns}</p>
+                  </div>
+                </div>
+
+                {/* OKX Wallet API balances */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                  <div style={{ background: "#0a0a0f", borderRadius: 8, padding: "8px 12px", flex: 1 }}>
+                    <p style={{ fontSize: 10, color: "#6b7280", marginBottom: 2 }}>USDC Balance</p>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: "#22c55e" }}>
+                      ${wallet ? wallet.usdcBalance ?? "0" : "..."}
+                    </p>
+                  </div>
+                  <div style={{ background: "#0a0a0f", borderRadius: 8, padding: "8px 12px", flex: 1 }}>
+                    <p style={{ fontSize: 10, color: "#6b7280", marginBottom: 2 }}>OKB Balance</p>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: "#f59e0b" }}>
+                      {wallet ? wallet.okbBalance ?? "0" : "..."} OKB
+                    </p>
+                  </div>
+                  <div style={{ background: "#0a0a0f", borderRadius: 8, padding: "8px 12px", flex: 1 }}>
+                    <p style={{ fontSize: 10, color: "#6b7280", marginBottom: 2 }}>Transactions</p>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: "#6366f1" }}>
+                      {wallet ? wallet.totalTransactions ?? "0" : "..."}
+                    </p>
                   </div>
                 </div>
 
@@ -103,14 +136,14 @@ export default function AgentsPage() {
           })}
         </div>
 
-        <div style={{ background: "#12121e", border: "1px solid #1e1e2e", borderRadius: 16, padding: 24 }}>
+        <div style={{ background: "#12121e", border: "1px solid #1e1e2e", borderRadius: 16, padding: 24, marginBottom: 24 }}>
           <p style={{ fontSize: 14, fontWeight: 600, color: "#e8e8f0", marginBottom: 16 }}>How agent payments work</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {[
               "User pays $0.01 USDC to the Orchestrator wallet on X Layer",
               "Orchestrator autonomously splits and sends USDC to all 3 agent wallets",
               "Each agent does its job then pays the next agent from its own wallet",
-              "All 5 transactions are permanently recorded on X Layer and verifiable on OKLink",
+              "All transactions are permanently recorded on X Layer and verifiable on OKLink",
             ].map((step, i) => (
               <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                 <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#6366f120", border: "1px solid #6366f1", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#6366f1", flexShrink: 0 }}>
@@ -119,6 +152,19 @@ export default function AgentsPage() {
                 <p style={{ fontSize: 13, color: "#6b7280", lineHeight: 1.6 }}>{step}</p>
               </div>
             ))}
+          </div>
+        </div>
+
+        <div style={{ background: "#12121e", border: "1px solid #1e1e2e", borderRadius: 16, padding: 24 }}>
+          <p style={{ fontSize: 14, fontWeight: 600, color: "#e8e8f0", marginBottom: 8 }}>OKX Wallet API integration</p>
+          <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 12, lineHeight: 1.6 }}>
+            Agent wallet balances are queried live using the OKX Wallet API. This is part of the Onchain OS infrastructure that powers InkGate.
+          </p>
+          <div style={{ background: "#0a0a0f", borderRadius: 8, padding: 12 }}>
+            <p style={{ fontSize: 11, color: "#6b7280", marginBottom: 4 }}>API endpoint used</p>
+            <p style={{ fontSize: 12, color: "#6366f1", fontFamily: "monospace" }}>
+              GET web3.okx.com/api/v5/wallet/asset/wallet-all-token-assets
+            </p>
           </div>
         </div>
       </div>
