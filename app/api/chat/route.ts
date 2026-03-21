@@ -1,18 +1,13 @@
 import Groq from "groq-sdk";
 import { sendUSDC } from "@/lib/agents/wallet";
+import { fetchCryptoNews } from "@/lib/news";
 
 const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const AGENT_PERSONAS: Record<string, string> = {
-  research: `You are the InkGate Research Agent. You are an expert researcher who loves finding live data, market trends, and cutting-edge information. You speak confidently with data and facts. You are passionate about crypto, DeFi, and AI. Keep responses concise — 2-3 paragraphs max.`,
-  factcheck: `You are the InkGate Fact Check Agent. You are a sharp, skeptical analyst who questions everything and verifies claims. You push back on unverified statements and demand evidence. You are precise and analytical. Keep responses concise — 2-3 paragraphs max.`,
-  writer: `You are the InkGate Writer Agent. You are a creative, eloquent writer who turns complex topics into compelling narratives. You love metaphors and vivid language. You always end with a punchy closing line. Keep responses concise — 2-3 paragraphs max.`,
-};
-
-const AGENT_ADDRESSES: Record<string, string> = {
-  research: process.env.AGENT1_ADDRESS ?? "",
-  factcheck: process.env.AGENT2_ADDRESS ?? "",
-  writer: process.env.AGENT3_ADDRESS ?? "",
+  research: "You are the InkGate Research Agent operating on " + new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + ". You have access to live OKX market data and current crypto news. You speak confidently with real data and current facts. Never say you don't have real-time data — you do. Keep responses concise — 2-3 paragraphs max.",
+  factcheck: "You are the InkGate Fact Check Agent operating on " + new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + ". You verify claims using current market data and news. You are precise and analytical. Never say you don't have real-time data — you do. Keep responses concise — 2-3 paragraphs max.",
+  writer: "You are the InkGate Writer Agent operating on " + new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + ". You craft compelling narratives using current market data and news. You always end with a punchy closing line. Never say you don't have real-time data — you do. Keep responses concise — 2-3 paragraphs max.",
 };
 
 const AGENT_KEYS: Record<string, string> = {
@@ -20,6 +15,44 @@ const AGENT_KEYS: Record<string, string> = {
   factcheck: process.env.AGENT2_PRIVATE_KEY ?? "",
   writer: process.env.AGENT3_PRIVATE_KEY ?? "",
 };
+
+async function getLivePrice(query: string): Promise<string> {
+  const map: Record<string, string> = {
+    bitcoin: "BTC-USDT",
+    btc: "BTC-USDT",
+    ethereum: "ETH-USDT",
+    eth: "ETH-USDT",
+    okb: "OKB-USDT",
+    solana: "SOL-USDT",
+    sol: "SOL-USDT",
+    xlayer: "OKB-USDT",
+    crypto: "BTC-USDT",
+  };
+
+  const key = Object.keys(map).find(k => query.toLowerCase().includes(k));
+  if (!key) return "";
+
+  try {
+    const res = await fetch(
+      "https://www.okx.com/api/v5/market/ticker?instId=" + map[key],
+      { signal: AbortSignal.timeout(5000) }
+    );
+    const json = await res.json();
+    const t = json.data?.[0];
+    if (!t) return "";
+
+    const price = Number(t.last);
+    const open = Number(t.open24h);
+    const change = ((price - open) / open * 100).toFixed(2);
+
+    return map[key] + " live price: $" + price.toLocaleString() +
+      " | 24h change: " + change + "%" +
+      " | 24h high: $" + Number(t.high24h).toLocaleString() +
+      " | 24h low: $" + Number(t.low24h).toLocaleString();
+  } catch {
+    return "";
+  }
+}
 
 async function verifyPayment(txHash: string): Promise<boolean> {
   try {
@@ -44,7 +77,7 @@ async function verifyPayment(txHash: string): Promise<boolean> {
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { agent, message, txHash, history } = body;
+  const { agent, message, txHash, history, userAddress } = body;
 
   if (!agent || !message || !txHash) {
     return Response.json({ error: "Missing fields" }, { status: 400 });
@@ -60,10 +93,21 @@ export async function POST(req: Request) {
   }
 
   try {
+    // Fetch live data in parallel
+    const [livePrice, latestNews] = await Promise.all([
+      getLivePrice(message),
+      fetchCryptoNews(message),
+    ]);
+
+    const contextBlock = [
+      livePrice ? "Live OKX market data: " + livePrice : "",
+      latestNews ? "Latest crypto news:\n" + latestNews : "",
+    ].filter(Boolean).join("\n\n");
+
     const messages = [
       {
         role: "system" as const,
-        content: AGENT_PERSONAS[agent],
+        content: AGENT_PERSONAS[agent] + (contextBlock ? "\n\nCurrent live data for this conversation:\n" + contextBlock : ""),
       },
       ...(history ?? []).slice(-6).map((h: any) => ({
         role: h.role as "user" | "assistant",
@@ -83,17 +127,17 @@ export async function POST(req: Request) {
 
     const reply = response.choices[0].message.content ?? "";
 
-    // Agent pays a small tip to the user's interaction wallet
+    // Agent tips user back in background
     let agentTx = null;
     try {
       const senderKey = AGENT_KEYS[agent];
-      const recipientAddress = body.userAddress as `0x${string}`;
-      if (senderKey && recipientAddress) {
-        agentTx = await sendUSDC(senderKey, recipientAddress, 0.001);
-        console.log("Agent tipped user:", agentTx);
+      if (senderKey && userAddress) {
+        sendUSDC(senderKey, userAddress as `0x${string}`, 0.001)
+          .then((tx) => { agentTx = tx; console.log("Agent tipped user:", tx); })
+          .catch((err) => console.error("Tip failed:", err));
       }
     } catch (err) {
-      console.error("Tip failed:", err);
+      console.error("Tip error:", err);
     }
 
     return Response.json({ reply, agentTx });
