@@ -6,12 +6,23 @@
 
 InkGate is a multi-agent AI content platform built on X Layer. A user pays $0.01 USDC once. The Orchestrator autonomously splits that payment to 3 AI agents onchain. Each agent does its job and pays the next agent — all without human involvement.
 
+## Features
+
+- **Pay-per-article** — 5 onchain agent payments per unlock
+- **Custom topics** — any topic researched on demand
+- **Trending topics** — live OKX Market API drives topic selection
+- **Agent Debate** — Bull vs Bear agents argue, Judge Agent decides
+- **Prediction Market** — AI predicts prices, users bet USDC, auto settlement
+- **Agent Chat** — pay per message, agent tips you back
+- **Article NFT** — minted on X Layer for every unlock
+- **Agent Registry** — discoverable at /api/registry
+
 ## How the agent pipeline works
 
 1. User pays $0.01 USDC on X Layer mainnet
 2. Orchestrator splits payment to 3 agents onchain
-3. Research Agent searches web for live data → pays Fact Check Agent
-4. Fact Check Agent verifies the research → pays Writer Agent
+3. Research Agent pulls live OKX prices + CoinDesk news then researches topic
+4. Fact Check Agent verifies the research
 5. Writer Agent writes the final article
 6. User receives article + 5 verifiable onchain transaction links
 
@@ -20,19 +31,28 @@ InkGate is a multi-agent AI content platform built on X Layer. A user pays $0.01
 | Agent | Role | Receives |
 |---|---|---|
 | Orchestrator | Routes payment | $0.01 from user |
-| Research Agent | Searches web for data | $0.004 |
+| Research Agent | Live data + research | $0.004 |
 | Fact Check Agent | Verifies research | $0.003 |
 | Writer Agent | Writes final article | $0.003 |
 
+## Onchain OS integrations
+
+- **OKX Market API** — live BTC/ETH/OKB/SOL/50+ token prices feed every agent
+- **OKX Wallet API** — live agent wallet balance queries
+- **X Layer RPC** — all agent transactions verified onchain
+- **x402 protocol** — HTTP 402 payment gating on all endpoints
+- **Agent Registry** — inkgate.vercel.app/api/registry
+
 ## Tech stack
 
-- Frontend: Next.js 16, Tailwind CSS
+- Frontend: Next.js 16
 - AI: Groq API (llama-3.3-70b-versatile)
+- News: CoinDesk + CoinTelegraph RSS live feeds
 - Payments: x402 protocol, viem
 - Blockchain: X Layer mainnet (Chain ID: 196)
 - Wallet: OKX Wallet
 - Stats: Upstash Redis
-- Deploy: Netlify
+- Deploy: Vercel
 
 ## X Layer integration
 
@@ -48,6 +68,16 @@ InkGate is a multi-agent AI content platform built on X Layer. A user pays $0.01
 - Transaction hash: 0x3943fe4c8ff30770560421d8f0fba34954b0fad9d55c1c3292aeca5bc79ee35b
 - Network: X Layer Mainnet
 
+## Agent Registry
+
+InkGate agents are publicly discoverable by other AI agents:
+```
+GET https://inkgate.vercel.app/api/registry
+```
+
+Returns a full manifest of all agents including wallet addresses,
+capabilities, pricing and endpoints.
+
 ## Local development
 
 1. Clone the repo
@@ -55,6 +85,7 @@ InkGate is a multi-agent AI content platform built on X Layer. A user pays $0.01
 ```
 npm install --legacy-peer-deps
 ```
+
 3. Create .env.local with:
 ```
 GROQ_API_KEY=
@@ -71,7 +102,14 @@ AGENT3_ADDRESS=
 AGENT3_PRIVATE_KEY=
 UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
+OKX_API_KEY=
+OKX_SECRET_KEY=
+OKX_PASSPHRASE=
+NEXT_PUBLIC_AGENT1_ADDRESS=
+NEXT_PUBLIC_AGENT2_ADDRESS=
+NEXT_PUBLIC_AGENT3_ADDRESS=
 ```
+
 4. Run:
 ```
 npm run dev
