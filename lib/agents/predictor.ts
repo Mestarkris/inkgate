@@ -1,4 +1,5 @@
 import Groq from "groq-sdk";
+import { fetchCryptoNews } from "../news";
 
 const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -11,6 +12,8 @@ export async function predictorAgent(symbol: string, currentPrice: number): Prom
 }> {
   console.log("Predictor Agent: analyzing", symbol, "at $" + currentPrice);
 
+  const latestNews = await fetchCryptoNews(symbol.split("-")[0]);
+  console.log("Predictor Agent: fetched news for", symbol);
   const response = await client.chat.completions.create({
     model: "llama-3.3-70b-versatile",
     max_tokens: 400,
@@ -21,7 +24,9 @@ export async function predictorAgent(symbol: string, currentPrice: number): Prom
       },
       {
         role: "user",
-        content: symbol + " current price: $" + currentPrice + ". Predict where it will be in 24 hours. Respond only with JSON.",
+        content: symbol + " current price: $" + currentPrice + ".\n" +
+          (latestNews ? "Latest news:\n" + latestNews + "\n\n" : "") +
+          "Based on the price data and news, predict where it will be in 24 hours. Respond only with JSON.",
       },
     ],
   });

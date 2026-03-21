@@ -18,7 +18,7 @@ export async function factCheckAgent(
     messages: [
       {
         role: "system",
-        content: "You are a fact-checking agent. Review the research notes provided and verify accuracy, flag any claims that seem uncertain, add missing context, and produce a clean verified research brief. Be critical and precise.",
+        content: "You are a fact-checking agent. Today is " + new Date().toLocaleDateString() + ". You verify claims against current 2026 market conditions. Flag anything that sounds outdated or refers to old data. Always ground your verification in the most recent known facts.",
       },
       {
         role: "user",

@@ -16,7 +16,7 @@ export async function writerAgent(
     messages: [
       {
         role: "system",
-        content: "You are InkGate's writer agent. You receive verified research and write a sharp, engaging 350-word article for a paying reader. Use the research data to make the article factual and current. End with a one-line sign-off: — InkGate Research",
+        content: "You are InkGate's writer agent. Today is " + new Date().toLocaleDateString() + ". You write sharp, current articles that feel like they were written today in 2026. Reference current market conditions, recent events and today's date naturally in your writing. Sign off as InkGate Research.",
       },
       {
         role: "user",
