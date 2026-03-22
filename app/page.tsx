@@ -26,13 +26,6 @@ export default function Home() {
     ? articles
     : articles.filter((a) => a.slug.includes(filter) || a.title.toLowerCase().includes(filter));
 
-  function handleFilter(value: string) {
-    setFilter(value);
-    setTimeout(() => {
-      document.getElementById("articles")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 10);
-  }
-
   return (
     <div style={{ minHeight: "100vh", background: "#0a0a0f", color: "#e8e8f0" }}>
       <nav style={{ borderBottom: "1px solid #1e1e2e", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -159,39 +152,50 @@ export default function Home() {
 
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "0 24px 16px" }}>
         <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 12 }}>Browse curated topics</p>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
           {categories.map((cat) => (
             <button
               key={cat.value}
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleFilter(cat.value); }}
-              style={{ padding: "6px 16px", borderRadius: 20, border: filter === cat.value ? "1px solid #6366f1" : "1px solid #1e1e2e", background: filter === cat.value ? "#6366f120" : "#12121e", color: filter === cat.value ? "#818cf8" : "#6b7280", fontSize: 13, cursor: "pointer" }}
+              onClick={() => setFilter(cat.value)}
+              style={{
+                padding: "6px 16px",
+                borderRadius: 20,
+                border: filter === cat.value ? "1px solid #6366f1" : "1px solid #1e1e2e",
+                background: filter === cat.value ? "#6366f120" : "#12121e",
+                color: filter === cat.value ? "#818cf8" : "#6b7280",
+                fontSize: 13,
+                cursor: "pointer",
+                outline: "none",
+              }}
             >
               {cat.label}
             </button>
           ))}
         </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))", gap: 16 }}>
+          {filtered.map((article, i) => (
+            <Link key={article.slug} href={"/article/" + article.slug} style={{ textDecoration: "none" }}>
+              <div style={{ background: "#12121e", border: "1px solid #1e1e2e", borderRadius: 16, padding: "24px", cursor: "pointer", height: "100%" }} onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#6366f1")} onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#1e1e2e")}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                  <span style={{ fontSize: 11, color: "#6b7280", background: "#0a0a0f", border: "1px solid #1e1e2e", borderRadius: 12, padding: "2px 10px" }}>#{String(i + 1).padStart(2, "0")}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#22c55e", background: "#22c55e15", border: "1px solid #22c55e30", borderRadius: 12, padding: "2px 10px" }}>$0.01</span>
+                </div>
+                <h2 style={{ fontSize: 15, fontWeight: 600, color: "#e8e8f0", lineHeight: 1.4, marginBottom: 12 }}>{article.title}</h2>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#4b5563" }}>
+                  <span>InkGate Research</span>
+                  <span>·</span>
+                  <span>3 agents</span>
+                  <span>·</span>
+                  <span>Live OKX data</span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
 
-      <div id="articles" style={{ maxWidth: 860, margin: "0 auto", padding: "16px 24px 80px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))", gap: 16 }}>
-        {filtered.map((article, i) => (
-          <Link key={article.slug} href={"/article/" + article.slug} style={{ textDecoration: "none" }}>
-            <div style={{ background: "#12121e", border: "1px solid #1e1e2e", borderRadius: 16, padding: "24px", cursor: "pointer", height: "100%" }} onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#6366f1")} onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#1e1e2e")}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                <span style={{ fontSize: 11, color: "#6b7280", background: "#0a0a0f", border: "1px solid #1e1e2e", borderRadius: 12, padding: "2px 10px" }}>#{String(i + 1).padStart(2, "0")}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#22c55e", background: "#22c55e15", border: "1px solid #22c55e30", borderRadius: 12, padding: "2px 10px" }}>$0.01</span>
-              </div>
-              <h2 style={{ fontSize: 15, fontWeight: 600, color: "#e8e8f0", lineHeight: 1.4, marginBottom: 12 }}>{article.title}</h2>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#4b5563" }}>
-                <span>InkGate Research</span>
-                <span>·</span>
-                <span>3 agents</span>
-                <span>·</span>
-                <span>Live OKX data</span>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
+      <div style={{ height: 80 }} />
     </div>
   );
 }
