@@ -26,6 +26,13 @@ export default function Home() {
     ? articles
     : articles.filter((a) => a.slug.includes(filter) || a.title.toLowerCase().includes(filter));
 
+  function handleFilter(value: string) {
+    setFilter(value);
+    setTimeout(() => {
+      document.getElementById("articles")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 10);
+  }
+
   return (
     <div style={{ minHeight: "100vh", background: "#0a0a0f", color: "#e8e8f0" }}>
       <nav style={{ borderBottom: "1px solid #1e1e2e", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -150,22 +157,22 @@ export default function Home() {
         </div>
       </div>
 
-      <div style={{ maxWidth: 860, margin: "0 auto", padding: "0 24px 24px" }}>
+      <div style={{ maxWidth: 860, margin: "0 auto", padding: "0 24px 16px" }}>
         <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 12 }}>Browse curated topics</p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-         {categories.map((cat) => (
-  <button
-    key={cat.value}
-    onClick={(e) => { e.preventDefault(); setFilter(cat.value); }}
-    style={{ padding: "6px 16px", borderRadius: 20, border: filter === cat.value ? "1px solid #6366f1" : "1px solid #1e1e2e", background: filter === cat.value ? "#6366f120" : "#12121e", color: filter === cat.value ? "#818cf8" : "#6b7280", fontSize: 13, cursor: "pointer" }}
-  >
-    {cat.label}
-  </button>
-))}
+          {categories.map((cat) => (
+            <button
+              key={cat.value}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleFilter(cat.value); }}
+              style={{ padding: "6px 16px", borderRadius: 20, border: filter === cat.value ? "1px solid #6366f1" : "1px solid #1e1e2e", background: filter === cat.value ? "#6366f120" : "#12121e", color: filter === cat.value ? "#818cf8" : "#6b7280", fontSize: 13, cursor: "pointer" }}
+            >
+              {cat.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div style={{ maxWidth: 860, margin: "0 auto", padding: "0 24px 80px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))", gap: 16 }}>
+      <div id="articles" style={{ maxWidth: 860, margin: "0 auto", padding: "16px 24px 80px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))", gap: 16 }}>
         {filtered.map((article, i) => (
           <Link key={article.slug} href={"/article/" + article.slug} style={{ textDecoration: "none" }}>
             <div style={{ background: "#12121e", border: "1px solid #1e1e2e", borderRadius: 16, padding: "24px", cursor: "pointer", height: "100%" }} onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#6366f1")} onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#1e1e2e")}>
