@@ -153,11 +153,15 @@ export default function Home() {
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "0 24px 24px" }}>
         <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 12 }}>Browse curated topics</p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {categories.map((cat) => (
-            <button key={cat.value} onClick={() => setFilter(cat.value)} style={{ padding: "6px 16px", borderRadius: 20, border: filter === cat.value ? "1px solid #6366f1" : "1px solid #1e1e2e", background: filter === cat.value ? "#6366f120" : "#12121e", color: filter === cat.value ? "#818cf8" : "#6b7280", fontSize: 13, cursor: "pointer" }}>
-              {cat.label}
-            </button>
-          ))}
+         {categories.map((cat) => (
+  <button
+    key={cat.value}
+    onClick={(e) => { e.preventDefault(); setFilter(cat.value); }}
+    style={{ padding: "6px 16px", borderRadius: 20, border: filter === cat.value ? "1px solid #6366f1" : "1px solid #1e1e2e", background: filter === cat.value ? "#6366f120" : "#12121e", color: filter === cat.value ? "#818cf8" : "#6b7280", fontSize: 13, cursor: "pointer" }}
+  >
+    {cat.label}
+  </button>
+))}
         </div>
       </div>
 
