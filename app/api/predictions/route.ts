@@ -1,5 +1,13 @@
+/**
+ * app/api/predictions/route.ts
+ * Improvements:
+ *  - Uses Redis mget() instead of looping get() — much faster
+ *  - Uses getLivePriceBySymbol from shared lib/prices.ts
+ *  - Removes hardcoded mock prices (they were stale)
+ */
 import { Redis } from "@upstash/redis";
 import { predictorAgent } from "@/lib/agents/predictor";
+import { getLivePriceBySymbol } from "@/lib/prices";
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
@@ -13,36 +21,21 @@ const TOKENS = [
   { symbol: "SOL-USDT", name: "Solana" },
 ];
 
-async function getLivePrice(instId: string): Promise<number> {
-  const MOCK: Record<string, number> = {
-    "BTC-USDT": 83000,
-    "ETH-USDT": 3200,
-    "OKB-USDT": 48,
-    "SOL-USDT": 145,
-  };
-  try {
-    const res = await fetch(
-      "https://www.okx.com/api/v5/market/ticker?instId=" + instId,
-      { signal: AbortSignal.timeout(5000) }
-    );
-    const json = await res.json();
-    return Number(json.data?.[0]?.last ?? MOCK[instId] ?? 100);
-  } catch {
-    return MOCK[instId] ?? 100;
-  }
-}
-
 export async function GET() {
   try {
     const keys = await redis.keys("prediction:*");
-    const predictions = [];
 
-    for (const key of keys) {
-      const p = await redis.get(key);
-      if (p) predictions.push(p);
+    if (keys.length === 0) {
+      return Response.json({ predictions: [] });
     }
 
-    predictions.sort((a: any, b: any) => b.createdAt - a.createdAt);
+    // Use mget to fetch all predictions in a single round-trip (was: loop of get())
+    const raw = await redis.mget<string[]>(...keys);
+    const predictions = raw
+      .filter(Boolean)
+      .map((p) => (typeof p === "string" ? JSON.parse(p) : p))
+      .sort((a: any, b: any) => b.createdAt - a.createdAt);
+
     return Response.json({ predictions });
   } catch {
     return Response.json({ predictions: [] });
@@ -52,7 +45,7 @@ export async function GET() {
 export async function POST() {
   try {
     const token = TOKENS[Math.floor(Math.random() * TOKENS.length)];
-    const price = await getLivePrice(token.symbol);
+    const price = await getLivePriceBySymbol(token.symbol); // ← shared util
 
     if (!price) {
       return Response.json({ error: "Could not fetch price" }, { status: 500 });
@@ -88,3 +81,4 @@ export async function POST() {
     return Response.json({ error: "Failed to create prediction" }, { status: 500 });
   }
 }
+
