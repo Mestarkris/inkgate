@@ -39,20 +39,20 @@ export default function Home() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#12121e", border: "1px solid #1e1e2e", borderRadius: 20, padding: "6px 12px", fontSize: 12, color: "#6366f1" }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", display: "inline-block" }}></span>
-          X Layer Mainnet
+          0G Mainnet
         </div>
       </nav>
 
       {/* Hero */}
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "64px 24px 40px" }}>
         <div style={{ display: "inline-block", background: "#12121e", border: "1px solid #6366f133", borderRadius: 20, padding: "4px 14px", fontSize: 12, color: "#818cf8", marginBottom: 20 }}>
-          Powered by x402 · OKX Market API · X Layer
+          Powered by 0G Compute · 0G Storage · Agent ID
         </div>
         <h1 style={{ fontSize: 48, fontWeight: 800, lineHeight: 1.1, letterSpacing: "-1.5px", marginBottom: 16, color: "#e8e8f0" }}>
           AI research,<br />pay to unlock.
         </h1>
         <p style={{ color: "#6b7280", fontSize: 17, maxWidth: 480, lineHeight: 1.6 }}>
-          3 autonomous AI agents research, fact-check and write every article. Each agent gets paid onchain. $0.01 USDC. No account needed.
+          3 autonomous AI agents research, fact-check and write every article. Each agent gets paid onchain. 0.01 A0GI. No account needed.
         </p>
 
         {/* Stats */}
@@ -63,7 +63,7 @@ export default function Home() {
           </div>
           <div style={{ background: "#12121e", border: "1px solid #1e1e2e", borderRadius: 16, padding: "20px 28px", minWidth: 140 }}>
             <p style={{ fontSize: 32, fontWeight: 800, color: "#22c55e", marginBottom: 4 }}>${stats.totalEarned}</p>
-            <p style={{ fontSize: 12, color: "#6b7280" }}>USDC earned</p>
+            <p style={{ fontSize: 12, color: "#6b7280" }}>A0GI earned</p>
           </div>
           <div style={{ background: "#12121e", border: "1px solid #1e1e2e", borderRadius: 16, padding: "20px 28px", minWidth: 140 }}>
             <p style={{ fontSize: 32, fontWeight: 800, color: "#f59e0b", marginBottom: 4 }}>{articles.length}</p>
@@ -82,7 +82,7 @@ export default function Home() {
           >
             <div>
               <p style={{ fontSize: 16, fontWeight: 700, color: "#e8e8f0", marginBottom: 4 }}>Write about anything</p>
-              <p style={{ fontSize: 13, color: "#6b7280" }}>Submit any topic · 3 agents research it live · $0.01 USDC</p>
+              <p style={{ fontSize: 13, color: "#6b7280" }}>Submit any topic · 3 agents research it live · 0.01 A0GI</p>
             </div>
             <div style={{ background: "#6366f1", color: "#fff", fontSize: 13, fontWeight: 600, padding: "8px 20px", borderRadius: 10, whiteSpace: "nowrap", marginLeft: 16 }}>
               Try it
@@ -101,7 +101,7 @@ export default function Home() {
           >
             <div>
               <p style={{ fontSize: 16, fontWeight: 700, color: "#e8e8f0", marginBottom: 4 }}>Trending topics</p>
-              <p style={{ fontSize: 13, color: "#6b7280" }}>Live OKX market data · Agents write what is moving now</p>
+              <p style={{ fontSize: 13, color: "#6b7280" }}>Live crypto market data · Agents write what is moving now</p>
             </div>
             <div style={{ background: "#f59e0b", color: "#000", fontSize: 13, fontWeight: 600, padding: "8px 20px", borderRadius: 10, whiteSpace: "nowrap", marginLeft: 16 }}>
               See trends
@@ -117,7 +117,7 @@ export default function Home() {
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <div style={{ background: "#0a0a0f", borderRadius: 10, padding: "10px 16px", flex: 1, minWidth: 140 }}>
               <p style={{ fontSize: 13, fontWeight: 600, color: "#6366f1", marginBottom: 4 }}>Research Agent</p>
-              <p style={{ fontSize: 11, color: "#6b7280" }}>Pulls live OKX market data + researches topic</p>
+              <p style={{ fontSize: 11, color: "#6b7280" }}>Pulls live crypto market data + researches topic</p>
               <p style={{ fontSize: 12, color: "#22c55e", marginTop: 6 }}>earns $0.004</p>
             </div>
             <div style={{ background: "#0a0a0f", borderRadius: 10, padding: "10px 16px", flex: 1, minWidth: 140 }}>
@@ -187,7 +187,7 @@ export default function Home() {
                 <span>·</span>
                 <span>3 agents</span>
                 <span>·</span>
-                <span>Live OKX data</span>
+                <span>Live market data</span>
               </div>
             </div>
           </Link>

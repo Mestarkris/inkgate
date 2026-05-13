@@ -1,31 +1,26 @@
 "use client";
-import { WagmiProvider, createConfig, http } from "wagmi";
-import { defineChain } from "viem";
+import { RainbowKitProvider, getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { WagmiProvider, http } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RainbowKitProvider, getDefaultWallets } from "@rainbow-me/rainbowkit";
+import { defineChain } from "viem";
 import "@rainbow-me/rainbowkit/styles.css";
 
-const xlayer = defineChain({
-  id: 196,
-  name: "X Layer",
-  nativeCurrency: { name: "OKB", symbol: "OKB", decimals: 18 },
-  rpcUrls: {
-    default: { http: ["https://rpc.xlayer.tech"] },
-  },
+export const ogChain = defineChain({
+  id: 16661,
+  name: "0G Mainnet",
+  nativeCurrency: { name: "A0GI", symbol: "A0GI", decimals: 18 },
+  rpcUrls: { default: { http: ["https://evmrpc.0g.ai"] } },
   blockExplorers: {
-    default: { name: "OKLink", url: "https://www.oklink.com/xlayer" },
+    default: { name: "0G Explorer", url: "https://chainscan.0g.ai" },
   },
 });
 
-const { connectors } = getDefaultWallets({
+const config = getDefaultConfig({
   appName: "InkGate",
-  projectId: "af0c7e78d10fbea7671c8df653111366",
-});
-
-const config = createConfig({
-  chains: [xlayer],
-  connectors,
-  transports: { [xlayer.id]: http() },
+  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "inkgate",
+  chains: [ogChain],
+  transports: { [ogChain.id]: http() },
+  ssr: true,
 });
 
 const queryClient = new QueryClient();

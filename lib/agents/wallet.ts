@@ -1,67 +1,57 @@
-import { createWalletClient, http, defineChain, parseUnits } from "viem";
+import { createWalletClient, http, defineChain, parseEther } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
-export const xlayer = defineChain({
-  id: 196,
-  name: "X Layer",
-  nativeCurrency: { name: "OKB", symbol: "OKB", decimals: 18 },
-  rpcUrls: { default: { http: ["https://rpc.xlayer.tech"] } },
+export const ogChain = defineChain({
+  id: 16661,
+  name: "0G Mainnet",
+  nativeCurrency: { name: "A0GI", symbol: "A0GI", decimals: 18 },
+  rpcUrls: { default: { http: ["https://evmrpc.0g.ai"] } },
   blockExplorers: {
-    default: { name: "OKLink", url: "https://www.oklink.com/xlayer" },
+    default: { name: "0G Explorer", url: "https://chainscan.0g.ai" },
   },
 });
-
-export const USDC_ADDRESS = "0x74b7F16337b8972027F6196A17a631aC6dE26d22" as `0x${string}`;
 
 export function createAgentWallet(privateKey: string) {
   const account = privateKeyToAccount(privateKey as `0x${string}`);
   const client = createWalletClient({
     account,
-    chain: xlayer,
-    transport: http("https://rpc.xlayer.tech"),
+    chain: ogChain,
+    transport: http("https://evmrpc.0g.ai"),
   });
   return { client, account };
 }
 
-export async function sendUSDC(
+export async function sendA0GI(
   privateKey: string,
   to: `0x${string}`,
-  amountUSDC: number
+  amount: number
 ) {
   const { client, account } = createAgentWallet(privateKey);
-  const amount = parseUnits(amountUSDC.toFixed(6), 6);
-  const paddedTo = to.slice(2).padStart(64, "0");
-  const paddedAmount = amount.toString(16).padStart(64, "0");
-  const data = ("0xa9059cbb" + paddedTo + paddedAmount) as `0x${string}`;
-
   const hash = await client.sendTransaction({
     account,
-    to: USDC_ADDRESS,
-    data,
-    chain: xlayer,
+    to,
+    value: parseEther(amount.toFixed(18)),
+    chain: ogChain,
   });
-
+  console.log(`[0G] Sent ${amount} A0GI to ${to} — tx: ${hash}`);
   return hash;
 }
+
+
 export async function mintArticleNFT(
   recipientAddress: `0x${string}`,
   title: string,
   txHash: string
 ): Promise<string> {
-  const { createWalletClient, http, toHex } = await import("viem");
-  const { privateKeyToAccount } = await import("viem/accounts");
-
+  const { toHex } = await import("viem");
   const account = privateKeyToAccount(
     process.env.PAYMENT_RECIPIENT_PRIVATE_KEY as `0x${string}`
   );
-
   const client = createWalletClient({
     account,
-    chain: xlayer,
-    transport: http("https://rpc.xlayer.tech"),
+    chain: ogChain,
+    transport: http("https://evmrpc.0g.ai"),
   });
-
-  // Encode article metadata as hex data
   const metadata = JSON.stringify({
     protocol: "InkGate",
     type: "ArticleNFT",
@@ -69,20 +59,15 @@ export async function mintArticleNFT(
     owner: recipientAddress,
     paymentTx: txHash,
     mintedAt: new Date().toISOString(),
-    network: "X Layer",
+    network: "0G Mainnet",
   });
-
-  const data = toHex(metadata);
-
-  // Mint by sending a self-transaction with metadata inscribed
   const mintTx = await client.sendTransaction({
     account,
     to: recipientAddress,
     value: BigInt(0),
-    data,
-    chain: xlayer,
+    data: toHex(metadata),
+    chain: ogChain,
   });
-
-  console.log("NFT minted:", mintTx);
+  console.log("[0G] Article NFT minted:", mintTx);
   return mintTx;
 }

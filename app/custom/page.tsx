@@ -23,20 +23,20 @@ export default function CustomPage() {
     setError(null);
     try {
       const { createWalletClient, custom, defineChain, parseUnits } = await import("viem");
-      const xlayer = defineChain({
-        id: 196,
-        name: "X Layer",
+      const ogChain = defineChain({
+        id: 16661,
+        name: "0G Mainnet",
         nativeCurrency: { name: "OKB", symbol: "OKB", decimals: 18 },
-        rpcUrls: { default: { http: ["https://rpc.xlayer.tech"] } },
+        rpcUrls: { default: { http: ["https://rpc.ogChain.tech"] } },
       });
       const walletClient = createWalletClient({
-        chain: xlayer,
+        chain: ogChain,
         transport: custom(window.ethereum),
       });
       await window.ethereum.request({ method: "eth_requestAccounts" });
       const accounts = await window.ethereum.request({ method: "eth_accounts" }) as string[];
       const address = accounts[0] as `0x${string}`;
-      const USDC_ADDRESS = "0x74b7F16337b8972027F6196A17a631aC6dE26d22" as `0x${string}`;
+      const A0GI_ADDRESS = "process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT" as `0x${string}`;
       const RECIPIENT = process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT as `0x${string}`;
       const AMOUNT = parseUnits("0.01", 6);
       const paddedRecipient = RECIPIENT.slice(2).padStart(64, "0");
@@ -44,9 +44,9 @@ export default function CustomPage() {
       const transferData = ("0xa9059cbb" + paddedRecipient + paddedAmount) as `0x${string}`;
       const hash = await walletClient.sendTransaction({
         account: address,
-        to: USDC_ADDRESS,
+        to: A0GI_ADDRESS,
         data: transferData,
-        chain: xlayer,
+        chain: ogChain,
       });
       setTxHash(hash);
       const response = await fetch("/api/custom", {
@@ -77,7 +77,7 @@ export default function CustomPage() {
   }
 
   if (content) {
-    const oklink = "https://www.oklink.com/xlayer/tx/";
+    const oklink = "https://chainscan.0g.ai/tx/";
     return (
       <div style={{ minHeight: "100vh", background: "#0a0a0f", color: "#e8e8f0" }}>
         <nav style={{ borderBottom: "1px solid #1e1e2e", padding: "16px 24px", display: "flex", alignItems: "center", gap: 16 }}>
@@ -157,13 +157,13 @@ export default function CustomPage() {
             Custom Article
           </h1>
           <p style={{ fontSize: 14, color: "#6b7280", marginBottom: 24, lineHeight: 1.6 }}>
-            Type any topic. Pay $0.01 USDC. Our 3 AI agents research, verify and write a fresh article just for you.
+            Type any topic. Pay 0.01 A0GI. Our 3 AI agents research, verify and write a fresh article just for you.
           </p>
           <input
             type="text"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
-            placeholder="e.g. The future of DeFi on X Layer"
+            placeholder="e.g. The future of DeFi on 0G Mainnet"
             style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: "1px solid #1e1e2e", background: "#0a0a0f", color: "#e8e8f0", fontSize: 14, marginBottom: 16, outline: "none", boxSizing: "border-box" }}
           />
           <div style={{ background: "#0a0a0f", borderRadius: 12, padding: 12, marginBottom: 24 }}>
@@ -184,8 +184,8 @@ export default function CustomPage() {
             </div>
           </div>
           <div style={{ background: "#0a0a0f", borderRadius: 12, padding: 16, marginBottom: 24, textAlign: "center" }}>
-            <p style={{ fontSize: 36, fontWeight: 800, color: "#6366f1", marginBottom: 4 }}>$0.01</p>
-            <p style={{ fontSize: 12, color: "#4b5563" }}>USDC on X Layer · 0 gas fee · Instant</p>
+            <p style={{ fontSize: 36, fontWeight: 800, color: "#6366f1", marginBottom: 4 }}>0.01</p>
+            <p style={{ fontSize: 12, color: "#4b5563" }}>A0GI on 0G Mainnet · 0 gas fee · Instant</p>
           </div>
           {!mounted ? (
             <div style={{ height: 48 }} />
@@ -195,14 +195,14 @@ export default function CustomPage() {
             </div>
           ) : (
             <button onClick={unlock} disabled={loading || !topic.trim()} style={{ width: "100%", padding: "14px", borderRadius: 12, border: "none", background: loading || !topic.trim() ? "#3730a3" : "#6366f1", color: "#fff", fontSize: 15, fontWeight: 600, cursor: loading || !topic.trim() ? "not-allowed" : "pointer" }}>
-              {loading ? "Agents researching..." : "Pay $0.01 & Generate Article"}
+              {loading ? "Agents researching..." : "Pay 0.01 & Generate Article"}
             </button>
           )}
           {error && (
             <p style={{ fontSize: 13, color: "#f87171", marginTop: 12, textAlign: "center" }}>{error}</p>
           )}
           <p style={{ fontSize: 11, color: "#374151", marginTop: 16, textAlign: "center" }}>
-            Powered by x402 · X Layer · 3 onchain agents
+            Powered by 0G Compute · 0G Storage · 3 onchain agents
           </p>
         </div>
       </div>

@@ -1,43 +1,18 @@
-import { Redis } from "@upstash/redis";
-
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+import { getPrediction, storePrediction } from "@/lib/0g";
 
 export async function POST(req: Request) {
-  const body = await req.json();
-  const { predictionId, side, txHash, bettor, amount } = body;
+  const { predictionId, direction, amount, txHash } = await req.json();
+  const prediction = await getPrediction(predictionId) as Record<string, unknown> | null;
+  if (!prediction) return Response.json({ error: "Prediction not found" }, { status: 404 });
 
-  if (!predictionId || !side || !txHash || !bettor) {
-    return Response.json({ error: "Missing fields" }, { status: 400 });
-  }
+  const updated = {
+    ...prediction,
+    yesPool: direction === "YES" ? ((prediction.yesPool as number) || 0) + (amount || 0.01) : prediction.yesPool,
+    noPool: direction === "NO" ? ((prediction.noPool as number) || 0) + (amount || 0.01) : prediction.noPool,
+    lastBetTx: txHash,
+    lastBetAt: new Date().toISOString(),
+  };
 
-  try {
-    const raw = await redis.get("prediction:" + predictionId) as string;
-    if (!raw) return Response.json({ error: "Prediction not found" }, { status: 404 });
-
-    const prediction = typeof raw === "string" ? JSON.parse(raw) : raw;
-
-    if (prediction.status !== "open") {
-      return Response.json({ error: "Prediction is closed" }, { status: 400 });
-    }
-
-    const bet = { bettor, txHash, amount: amount ?? 0.01, timestamp: Date.now() };
-
-    if (side === "yes") {
-      prediction.yesBets.push(bet);
-      prediction.yesPool += bet.amount;
-    } else {
-      prediction.noBets.push(bet);
-      prediction.noPool += bet.amount;
-    }
-
-    await redis.set("prediction:" + predictionId, JSON.stringify(prediction));
-
-    return Response.json({ success: true, prediction });
-  } catch (err) {
-    console.error("Bet error:", err);
-    return Response.json({ error: "Failed to place bet" }, { status: 500 });
-  }
+  await storePrediction(predictionId, updated);
+  return Response.json({ success: true, prediction: updated });
 }

@@ -1,98 +1,44 @@
-import Groq from "groq-sdk";
-import { sendUSDC } from "./wallet";
-
-const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
+import { ogInference } from "@/lib/0g-compute";
+import { sendA0GI } from "./wallet";
 
 export async function bullAgent(topic: string): Promise<{ argument: string; txHash: string }> {
-  console.log("Bull Agent: arguing FOR", topic);
-
-  const response = await client.chat.completions.create({
-    model: "llama-3.3-70b-versatile",
-    max_tokens: 400,
-    messages: [
-      {
-        role: "system",
-        content: "You are a passionate bull agent. Argue strongly IN FAVOR of the topic with data, logic and conviction. Be persuasive and specific. 3 paragraphs max.",
-      },
-      {
-        role: "user",
-        content: "Make the strongest possible bull case for: " + topic,
-      },
-    ],
-  });
-
-  const argument = response.choices[0].message.content ?? "";
-
-  // Bull agent pays Judge Agent
-  const judgeAddress = process.env.AGENT3_ADDRESS as `0x${string}`;
-  const txHash = await sendUSDC(
-    process.env.AGENT1_PRIVATE_KEY!,
-    judgeAddress,
-    0.002
+  const { content: argument } = await ogInference(
+    "You are the InkGate Bull Agent. Make the strongest possible bullish case. Be confident and data-driven.",
+    "Make a compelling bullish argument for: " + topic + ". Max 150 words.",
+    300
   );
-
-  console.log("Bull Agent: paid Judge Agent", txHash);
+  const txHash = await sendA0GI(
+    process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!,
+    process.env.AGENT1_ADDRESS as `0x${string}`,
+    0.002
+  ).catch(() => "0x0");
   return { argument, txHash };
 }
 
 export async function bearAgent(topic: string): Promise<{ argument: string; txHash: string }> {
-  console.log("Bear Agent: arguing AGAINST", topic);
-
-  const response = await client.chat.completions.create({
-    model: "llama-3.3-70b-versatile",
-    max_tokens: 400,
-    messages: [
-      {
-        role: "system",
-        content: "You are a sharp bear agent. Argue strongly AGAINST the topic with data, logic and skepticism. Be persuasive and specific. 3 paragraphs max.",
-      },
-      {
-        role: "user",
-        content: "Make the strongest possible bear case against: " + topic,
-      },
-    ],
-  });
-
-  const argument = response.choices[0].message.content ?? "";
-
-  // Bear agent pays Judge Agent
-  const judgeAddress = process.env.AGENT3_ADDRESS as `0x${string}`;
-  const txHash = await sendUSDC(
-    process.env.AGENT2_PRIVATE_KEY!,
-    judgeAddress,
-    0.002
+  const { content: argument } = await ogInference(
+    "You are the InkGate Bear Agent. Make the strongest possible bearish case. Be confident and data-driven.",
+    "Make a compelling bearish argument for: " + topic + ". Max 150 words.",
+    300
   );
-
-  console.log("Bear Agent: paid Judge Agent", txHash);
+  const txHash = await sendA0GI(
+    process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!,
+    process.env.AGENT2_ADDRESS as `0x${string}`,
+    0.002
+  ).catch(() => "0x0");
   return { argument, txHash };
 }
 
-export async function judgeAgent(
-  topic: string,
-  bullArgument: string,
-  bearArgument: string
-): Promise<{ verdict: string; winner: "bull" | "bear"; reasoning: string }> {
-  console.log("Judge Agent: evaluating debate on", topic);
-
-  const response = await client.chat.completions.create({
-    model: "llama-3.3-70b-versatile",
-    max_tokens: 400,
-    messages: [
-      {
-        role: "system",
-        content: "You are an impartial judge agent. Evaluate both arguments fairly based on logic, data quality, and persuasiveness. Declare a winner and explain why. Be decisive.",
-      },
-      {
-        role: "user",
-        content: "Topic: " + topic + "\n\nBull argument:\n" + bullArgument + "\n\nBear argument:\n" + bearArgument + "\n\nWho wins this debate and why? Start your response with either BULL WINS or BEAR WINS then explain.",
-      },
-    ],
-  });
-
-  const verdict = response.choices[0].message.content ?? "";
-  const winner = verdict.toUpperCase().includes("BULL WINS") ? "bull" : "bear";
-  const reasoning = verdict.replace(/^(BULL WINS|BEAR WINS)/i, "").trim();
-
-  console.log("Judge Agent: verdict =", winner);
-  return { verdict, winner, reasoning };
+export async function judgeAgent(topic: string, bullArg: string, bearArg: string): Promise<{ verdict: string; txHash: string }> {
+  const { content: verdict } = await ogInference(
+    "You are the InkGate Judge Agent on 0G Compute. Evaluate both sides of a debate fairly and give a verdict.",
+    "Topic: " + topic + "\n\nBull case:\n" + bullArg + "\n\nBear case:\n" + bearArg + "\n\nGive a balanced verdict in 100 words. Declare a winner.",
+    200
+  );
+  const txHash = await sendA0GI(
+    process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!,
+    process.env.AGENT3_ADDRESS as `0x${string}`,
+    0.002
+  ).catch(() => "0x0");
+  return { verdict, txHash };
 }

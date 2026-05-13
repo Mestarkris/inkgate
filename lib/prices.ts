@@ -1,65 +1,52 @@
 /**
  * lib/prices.ts
- * Shared OKX price fetcher — single source of truth.
- * Replaces duplicate getLivePrice() in research.ts and chat/route.ts
+ * Crypto price fetcher using CoinGecko public API (no key required)
  */
 
-export const SYMBOL_MAP: Record<string, string> = {
-  bitcoin: "BTC-USDT",   btc: "BTC-USDT",
-  ethereum: "ETH-USDT",  eth: "ETH-USDT",
-  okb: "OKB-USDT",       xlayer: "OKB-USDT",
-  solana: "SOL-USDT",    sol: "SOL-USDT",
-  defi: "ETH-USDT",      crypto: "BTC-USDT",
-  bnb: "BNB-USDT",       binance: "BNB-USDT",
-  xrp: "XRP-USDT",       ripple: "XRP-USDT",
-  cardano: "ADA-USDT",   ada: "ADA-USDT",
-  dogecoin: "DOGE-USDT", doge: "DOGE-USDT",
-  polygon: "MATIC-USDT", matic: "MATIC-USDT",
-  avalanche: "AVAX-USDT",avax: "AVAX-USDT",
-  chainlink: "LINK-USDT",link: "LINK-USDT",
-  uniswap: "UNI-USDT",   uni: "UNI-USDT",
-  arbitrum: "ARB-USDT",  arb: "ARB-USDT",
-  optimism: "OP-USDT",   op: "OP-USDT",
-  polkadot: "DOT-USDT",  dot: "DOT-USDT",
-  litecoin: "LTC-USDT",  ltc: "LTC-USDT",
-  shiba: "SHIB-USDT",    shib: "SHIB-USDT",
-  tron: "TRX-USDT",      trx: "TRX-USDT",
-  atom: "ATOM-USDT",     cosmos: "ATOM-USDT",
-  near: "NEAR-USDT",
-  aptos: "APT-USDT",     apt: "APT-USDT",
-  sui: "SUI-USDT",
-  pepe: "PEPE-USDT",
-  floki: "FLOKI-USDT",
-  injective: "INJ-USDT", inj: "INJ-USDT",
-  stacks: "STX-USDT",    stx: "STX-USDT",
-  filecoin: "FIL-USDT",  fil: "FIL-USDT",
-  aave: "AAVE-USDT",
-  compound: "COMP-USDT", comp: "COMP-USDT",
-  maker: "MKR-USDT",     mkr: "MKR-USDT",
-  lido: "LDO-USDT",      ldo: "LDO-USDT",
-  render: "RNDR-USDT",   rndr: "RNDR-USDT",
-  fetch: "FET-USDT",     fet: "FET-USDT",
-  worldcoin: "WLD-USDT", wld: "WLD-USDT",
-  ton: "TON-USDT",
-  notcoin: "NOT-USDT",   not: "NOT-USDT",
-  bonk: "BONK-USDT",
-  wif: "WIF-USDT",
-  popcat: "POPCAT-USDT",
-  meme: "MEME-USDT",
+const COINGECKO_IDS: Record<string, string> = {
+  bitcoin: "bitcoin",       btc: "bitcoin",
+  ethereum: "ethereum",     eth: "ethereum",
+  solana: "solana",         sol: "solana",
+  bnb: "binancecoin",       binance: "binancecoin",
+  xrp: "ripple",            ripple: "ripple",
+  cardano: "cardano",       ada: "cardano",
+  dogecoin: "dogecoin",     doge: "dogecoin",
+  polygon: "matic-network", matic: "matic-network",
+  avalanche: "avalanche-2", avax: "avalanche-2",
+  chainlink: "chainlink",   link: "chainlink",
+  uniswap: "uniswap",       uni: "uniswap",
+  arbitrum: "arbitrum",     arb: "arbitrum",
+  optimism: "optimism",     op: "optimism",
+  polkadot: "polkadot",     dot: "polkadot",
+  litecoin: "litecoin",     ltc: "litecoin",
+  shiba: "shiba-inu",       shib: "shiba-inu",
+  tron: "tron",             trx: "tron",
+  atom: "cosmos",           cosmos: "cosmos",
+  near: "near",
+  aptos: "aptos",           apt: "aptos",
+  sui: "sui",
+  pepe: "pepe",
+  injective: "injective-protocol", inj: "injective-protocol",
+  filecoin: "filecoin",     fil: "filecoin",
+  aave: "aave",
+  maker: "maker",           mkr: "maker",
+  render: "render-token",   rndr: "render-token",
+  ton: "the-open-network",
+  og: "bitcoin",
+  crypto: "bitcoin",        defi: "ethereum",
 };
 
 export function formatPrice(p: number): string {
   if (p === 0) return "0";
   if (p < 0.000001) return p.toExponential(4);
-  if (p < 0.0001) return p.toFixed(10).replace(/0+$/, "").replace(/\.$/, "");
-  if (p < 0.01) return p.toFixed(8).replace(/0+$/, "").replace(/\.$/, "");
-  if (p < 1) return p.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
+  if (p < 0.01) return p.toFixed(8).replace(/0+$/, "");
+  if (p < 1) return p.toFixed(6).replace(/0+$/, "");
   if (p < 1000) return p.toFixed(2);
   return p.toLocaleString();
 }
 
 export interface PriceData {
-  instId: string;
+  id: string;
   price: number;
   change24h: string;
   high24h: number;
@@ -67,66 +54,74 @@ export interface PriceData {
   formattedString: string;
 }
 
-export async function getLivePrice(query: string): Promise<string> {
-  const data = await getLivePriceData(query);
-  return data?.formattedString ?? "";
-}
-
 export async function getLivePriceData(query: string): Promise<PriceData | null> {
-  const key = Object.keys(SYMBOL_MAP).find((k) =>
-    query.toLowerCase().includes(k)
-  );
+  const key = Object.keys(COINGECKO_IDS).find(k => query.toLowerCase().includes(k));
   if (!key) return null;
+  const id = COINGECKO_IDS[key];
 
-  const instId = SYMBOL_MAP[key];
   try {
     const res = await fetch(
-      `https://www.okx.com/api/v5/market/ticker?instId=${instId}`,
-      { signal: AbortSignal.timeout(5000) }
+      `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true`,
+      { signal: AbortSignal.timeout(5000), headers: { "Accept": "application/json" } }
     );
     const json = await res.json();
-    const t = json.data?.[0];
-    if (!t) return null;
+    const data = json[id];
+    if (!data) return null;
 
-    const price = Number(t.last);
-    const open = Number(t.open24h);
-    const high24h = Number(t.high24h);
-    const low24h = Number(t.low24h);
-    const change24h = (((price - open) / open) * 100).toFixed(2);
+    const price = data.usd;
+    const change24h = (data.usd_24h_change ?? 0).toFixed(2);
 
     return {
-      instId,
+      id,
       price,
       change24h,
-      high24h,
-      low24h,
-      formattedString:
-        `Live OKX Market data (${new Date().toLocaleDateString()}): ` +
-        `${instId} = $${formatPrice(price)}` +
-        ` | 24h change: ${change24h}%` +
-        ` | 24h high: $${formatPrice(high24h)}` +
-        ` | 24h low: $${formatPrice(low24h)}`,
+      high24h: price,
+      low24h: price,
+      formattedString: `Live Market data (${new Date().toLocaleDateString()}): ${id.toUpperCase()} = $${formatPrice(price)} | 24h change: ${change24h}%`,
     };
   } catch {
     return null;
   }
 }
 
-/** Fetch price by exact instId symbol (e.g. "BTC-USDT") */
-export async function getLivePriceBySymbol(instId: string): Promise<number> {
+export async function getLivePrice(query: string): Promise<string> {
+  const data = await getLivePriceData(query);
+  return data?.formattedString ?? "";
+}
+
+export async function getLivePriceBySymbol(symbol: string): Promise<number> {
   const FALLBACKS: Record<string, number> = {
-    "BTC-USDT": 83000, "ETH-USDT": 3200,
-    "OKB-USDT": 48,    "SOL-USDT": 145,
+    "BTC-USDT": 83000, "ETH-USDT": 3200, "SOL-USDT": 145,
   };
+  const key = symbol.replace("-USDT", "").toLowerCase();
+  const data = await getLivePriceData(key);
+  return data?.price ?? FALLBACKS[symbol] ?? 100;
+}
+
+export const SYMBOL_MAP: Record<string, string> = Object.fromEntries(
+  Object.entries(COINGECKO_IDS).map(([k, v]) => [k, v])
+);
+
+/**
+ * Fetch A0GI (0G native token) price
+ * Uses CoinGecko - will show price once listed
+ */
+export async function getA0GIPrice(): Promise<{ price: number | null; message: string }> {
   try {
     const res = await fetch(
-      `https://www.okx.com/api/v5/market/ticker?instId=${instId}`,
+      "https://api.coingecko.com/api/v3/simple/price?ids=zero-gravity&vs_currencies=usd&include_24hr_change=true",
       { signal: AbortSignal.timeout(5000) }
     );
     const json = await res.json();
-    return Number(json.data?.[0]?.last ?? FALLBACKS[instId] ?? 100);
+    const data = json["zero-gravity"];
+    if (data?.usd) {
+      return {
+        price: data.usd,
+        message: `A0GI (0G Token) = $${formatPrice(data.usd)} | 24h: ${(data.usd_24h_change ?? 0).toFixed(2)}%`,
+      };
+    }
+    return { price: null, message: "A0GI price: not yet listed on CoinGecko" };
   } catch {
-    return FALLBACKS[instId] ?? 100;
+    return { price: null, message: "A0GI price: unavailable" };
   }
 }
-

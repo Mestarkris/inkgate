@@ -9,7 +9,7 @@ const SUGGESTED = [
   "Ethereum will flip Bitcoin",
   "DeFi will replace traditional banking",
   "AI agents will replace human traders",
-  "X Layer will be the top ZK rollup",
+  "0G Mainnet will be the top ZK rollup",
   "Memecoins are a net positive for crypto",
 ];
 
@@ -31,20 +31,20 @@ export default function DebatePage() {
     setError(null);
     try {
       const { createWalletClient, custom, defineChain, parseUnits } = await import("viem");
-      const xlayer = defineChain({
-        id: 196,
-        name: "X Layer",
+      const ogChain = defineChain({
+        id: 16661,
+        name: "0G Mainnet",
         nativeCurrency: { name: "OKB", symbol: "OKB", decimals: 18 },
-        rpcUrls: { default: { http: ["https://rpc.xlayer.tech"] } },
+        rpcUrls: { default: { http: ["https://rpc.ogChain.tech"] } },
       });
       const walletClient = createWalletClient({
-        chain: xlayer,
+        chain: ogChain,
         transport: custom(window.ethereum),
       });
       await window.ethereum.request({ method: "eth_requestAccounts" });
       const accounts = await window.ethereum.request({ method: "eth_accounts" }) as string[];
       const address = accounts[0] as `0x${string}`;
-      const USDC_ADDRESS = "0x74b7F16337b8972027F6196A17a631aC6dE26d22" as `0x${string}`;
+      const A0GI_ADDRESS = "process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT" as `0x${string}`;
       const RECIPIENT = process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT as `0x${string}`;
       const AMOUNT = parseUnits("0.01", 6);
       const paddedRecipient = RECIPIENT.slice(2).padStart(64, "0");
@@ -52,9 +52,9 @@ export default function DebatePage() {
       const transferData = ("0xa9059cbb" + paddedRecipient + paddedAmount) as `0x${string}`;
       const hash = await walletClient.sendTransaction({
         account: address,
-        to: USDC_ADDRESS,
+        to: A0GI_ADDRESS,
         data: transferData,
-        chain: xlayer,
+        chain: ogChain,
       });
       setTxHash(hash);
       const response = await fetch("/api/debate", {
@@ -80,7 +80,7 @@ export default function DebatePage() {
   }
 
   if (result) {
-    const oklink = "https://www.oklink.com/xlayer/tx/";
+    const oklink = "https://chainscan.0g.ai/tx/";
     return (
       <div style={{ minHeight: "100vh", background: "#0a0a0f", color: "#e8e8f0" }}>
         <nav style={{ borderBottom: "1px solid #1e1e2e", padding: "16px 24px", display: "flex", alignItems: "center", gap: 16 }}>
@@ -220,8 +220,8 @@ export default function DebatePage() {
           </div>
 
           <div style={{ background: "#0a0a0f", borderRadius: 12, padding: 16, marginBottom: 24, textAlign: "center" }}>
-            <p style={{ fontSize: 36, fontWeight: 800, color: "#6366f1", marginBottom: 4 }}>$0.01</p>
-            <p style={{ fontSize: 12, color: "#4b5563" }}>USDC on X Layer · 3 agents · 4 onchain payments</p>
+            <p style={{ fontSize: 36, fontWeight: 800, color: "#6366f1", marginBottom: 4 }}>0.01</p>
+            <p style={{ fontSize: 12, color: "#4b5563" }}>A0GI on 0G Mainnet · 3 agents · 4 onchain payments</p>
           </div>
 
           {!mounted ? (
@@ -236,7 +236,7 @@ export default function DebatePage() {
               disabled={loading || !topic.trim()}
               style={{ width: "100%", padding: "14px", borderRadius: 12, border: "none", background: loading || !topic.trim() ? "#3730a3" : "#6366f1", color: "#fff", fontSize: 15, fontWeight: 600, cursor: loading || !topic.trim() ? "not-allowed" : "pointer" }}
             >
-              {loading ? "Agents debating..." : "Pay $0.01 & Start Debate"}
+              {loading ? "Agents debating..." : "Pay 0.01 & Start Debate"}
             </button>
           )}
 

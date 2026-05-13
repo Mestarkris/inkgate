@@ -4,7 +4,7 @@ import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: "InkGate — Pay-per-Read AI Articles",
-  description: "Unlock AI-generated articles with $0.01 USDC on X Layer",
+  description: "AI-generated articles powered by 0G Compute Network and 0G Storage",
 };
 
 export default function RootLayout({

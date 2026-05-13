@@ -1,94 +1,51 @@
 import { bullAgent, bearAgent, judgeAgent } from "@/lib/agents/debate";
-import { sendUSDC } from "@/lib/agents/wallet";
+import { sendA0GI } from "@/lib/agents/wallet";
 
 async function verifyPayment(txHash: string): Promise<boolean> {
   try {
-    const res = await fetch("https://rpc.xlayer.tech", {
+    const res = await fetch("https://evmrpc.0g.ai", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        method: "eth_getTransactionReceipt",
-        params: [txHash],
-        id: 1,
-      }),
+      body: JSON.stringify({ jsonrpc: "2.0", method: "eth_getTransactionReceipt", params: [txHash], id: 1 }),
     });
     const json = await res.json();
-    const receipt = json.result;
-    if (!receipt) return true;
-    return receipt.status === "0x1";
-  } catch {
-    return true;
-  }
+    if (!json.result) return true;
+    return json.result.status === "0x1";
+  } catch { return true; }
 }
 
 export async function POST(req: Request) {
-  const body = await req.json();
-  const { topic, txHash } = body;
-
-  if (!topic || topic.trim().length < 3) {
-    return Response.json({ error: "Topic too short" }, { status: 400 });
-  }
+  const { topic, txHash } = await req.json();
 
   if (!txHash) {
-    return Response.json({ error: "Payment required" }, { status: 402 });
+    return Response.json({
+      error: "Payment required",
+      paymentInfo: { network: "0G Mainnet", chainId: 16661, amount: "0.01 A0GI", payTo: process.env.PAYMENT_RECIPIENT_ADDRESS },
+    }, { status: 402 });
   }
 
   const isValid = await verifyPayment(txHash);
-  if (!isValid) {
-    return Response.json({ error: "Payment not confirmed on X Layer" }, { status: 402 });
-  }
+  if (!isValid) return Response.json({ error: "Payment not confirmed on 0G Mainnet" }, { status: 402 });
 
-  try {
-    console.log("Debate Orchestrator: topic =", topic);
+  const [bullTx, bearTx] = await Promise.all([
+    sendA0GI(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT1_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0"),
+    sendA0GI(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT2_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0"),
+  ]);
 
-    // Pay Bull and Bear agents
-    const bullTx = await sendUSDC(
-      process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!,
-      process.env.AGENT1_ADDRESS as `0x${string}`,
-      0.004
-    );
-    const bearTx = await sendUSDC(
-      process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!,
-      process.env.AGENT2_ADDRESS as `0x${string}`,
-      0.004
-    );
+  const [{ argument: bullArg }, { argument: bearArg }] = await Promise.all([
+    bullAgent(topic),
+    bearAgent(topic),
+  ]);
 
-    // Both agents argue simultaneously
-    const [bullResult, bearResult] = await Promise.all([
-      bullAgent(topic),
-      bearAgent(topic),
-    ]);
+  const bullToJudgeTx = await sendA0GI(process.env.AGENT1_PRIVATE_KEY!, process.env.AGENT3_ADDRESS as `0x${string}`, 0.001).catch(() => "0x0");
+  const bearToJudgeTx = await sendA0GI(process.env.AGENT2_PRIVATE_KEY!, process.env.AGENT3_ADDRESS as `0x${string}`, 0.001).catch(() => "0x0");
 
-    // Judge decides winner
-    const { verdict, winner, reasoning } = await judgeAgent(
-      topic,
-      bullResult.argument,
-      bearResult.argument
-    );
+  const { verdict } = await judgeAgent(topic, bullArg, bearArg);
 
-    await fetch(new URL("/api/stats", req.url), { method: "POST" }).catch(() => {});
-
-    return Response.json({
-      topic,
-      bull: bullResult.argument,
-      bear: bearResult.argument,
-      winner,
-      reasoning,
-      verdict,
-      agentPipeline: {
-        orchestratorTx: txHash,
-        bullTx,
-        bearTx,
-        bullToJudgeTx: bullResult.txHash,
-        bearToJudgeTx: bearResult.txHash,
-      },
-    });
-  } catch (err) {
-    console.error("Debate error:", err);
-    return Response.json(
-      { error: "Debate failed: " + (err as Error).message },
-      { status: 500 }
-    );
-  }
+  return Response.json({
+    topic, bullArg, bearArg, verdict,
+    network: "0G Mainnet",
+    computeProvider: "0G Compute (TEE-verified)",
+    agentPipeline: { orchestratorTx: txHash, bullTx, bearTx, bullToJudgeTx, bearToJudgeTx },
+  });
 }

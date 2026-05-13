@@ -64,20 +64,20 @@ export default function ChatPage() {
 
     try {
       const { createWalletClient, custom, defineChain, parseUnits } = await import("viem");
-      const xlayer = defineChain({
-        id: 196,
-        name: "X Layer",
+      const ogChain = defineChain({
+        id: 16661,
+        name: "0G Mainnet",
         nativeCurrency: { name: "OKB", symbol: "OKB", decimals: 18 },
-        rpcUrls: { default: { http: ["https://rpc.xlayer.tech"] } },
+        rpcUrls: { default: { http: ["https://rpc.ogChain.tech"] } },
       });
       const walletClient = createWalletClient({
-        chain: xlayer,
+        chain: ogChain,
         transport: custom(window.ethereum),
       });
       await window.ethereum.request({ method: "eth_requestAccounts" });
       const accounts = await window.ethereum.request({ method: "eth_accounts" }) as string[];
       const address = accounts[0] as `0x${string}`;
-      const USDC = "0x74b7F16337b8972027F6196A17a631aC6dE26d22" as `0x${string}`;
+      const A0GI = "process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT" as `0x${string}`;
       const RECIPIENT = process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT as `0x${string}`;
       const AMOUNT = parseUnits("0.01", 6);
       const paddedRecipient = RECIPIENT.slice(2).padStart(64, "0");
@@ -85,9 +85,9 @@ export default function ChatPage() {
       const data = ("0xa9059cbb" + paddedRecipient + paddedAmount) as `0x${string}`;
       const hash = await walletClient.sendTransaction({
         account: address,
-        to: USDC,
+        to: A0GI,
         data,
-        chain: xlayer,
+        chain: ogChain,
       });
 
       const newMessages: Message[] = [
@@ -139,7 +139,7 @@ export default function ChatPage() {
           </div>
           <h1 style={{ fontSize: 36, fontWeight: 800, marginBottom: 8, color: "#e8e8f0" }}>Agent Chat</h1>
           <p style={{ fontSize: 15, color: "#6b7280", marginBottom: 40, lineHeight: 1.6 }}>
-            Talk directly to any InkGate agent. Pay $0.01 USDC per message. The agent even tips you back $0.001 for every reply. All payments onchain.
+            Talk directly to any InkGate agent. Pay 0.01 A0GI per message. The agent even tips you back $0.001 for every reply. All payments onchain.
           </p>
           <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 16 }}>Choose an agent to chat with</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -176,14 +176,14 @@ export default function ChatPage() {
             <span style={{ fontSize: 13, color: agent?.color }}>{agent?.name}</span>
           </div>
         </div>
-        <div style={{ fontSize: 12, color: "#6b7280" }}>$0.01 per message · agent tips $0.001 back</div>
+        <div style={{ fontSize: 12, color: "#6b7280" }}>0.01 per message · agent tips $0.001 back</div>
       </nav>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "24px", maxWidth: 680, width: "100%", margin: "0 auto" }}>
         {messages.length === 0 && (
           <div style={{ textAlign: "center", padding: "60px 0" }}>
             <p style={{ fontSize: 15, color: "#6b7280", marginBottom: 8 }}>Start chatting with {agent?.name}</p>
-            <p style={{ fontSize: 13, color: "#4b5563" }}>Each message costs $0.01 USDC · Paid onchain · Agent tips you back</p>
+            <p style={{ fontSize: 13, color: "#4b5563" }}>Each message costs 0.01 A0GI · Paid onchain · Agent tips you back</p>
           </div>
         )}
         {messages.map((msg, i) => (
@@ -202,12 +202,12 @@ export default function ChatPage() {
               </div>
               <div style={{ display: "flex", gap: 8, marginTop: 6, flexWrap: "wrap", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
                 {msg.txHash && (
-                  <a href={"https://www.oklink.com/xlayer/tx/" + msg.txHash} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#4b5563", textDecoration: "none" }}>
+                  <a href={"https://chainscan.0g.ai/tx/" + msg.txHash} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#4b5563", textDecoration: "none" }}>
                     payment tx
                   </a>
                 )}
                 {msg.agentTx && (
-                  <a href={"https://www.oklink.com/xlayer/tx/" + msg.agentTx} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#22c55e", textDecoration: "none" }}>
+                  <a href={"https://chainscan.0g.ai/tx/" + msg.agentTx} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#22c55e", textDecoration: "none" }}>
                     agent tip tx
                   </a>
                 )}
@@ -238,7 +238,7 @@ export default function ChatPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && !loading && sendMessage()}
-              placeholder={"Ask " + agent?.name + " anything... ($0.01 USDC)"}
+              placeholder={"Ask " + agent?.name + " anything... (0.01 A0GI)"}
               style={{ flex: 1, padding: "12px 16px", borderRadius: 12, border: "1px solid #1e1e2e", background: "#12121e", color: "#e8e8f0", fontSize: 14, outline: "none" }}
             />
             <button
@@ -246,7 +246,7 @@ export default function ChatPage() {
               disabled={loading || !input.trim()}
               style={{ padding: "12px 20px", borderRadius: 12, border: "none", background: loading || !input.trim() ? "#3730a3" : "#6366f1", color: "#fff", fontSize: 14, fontWeight: 600, cursor: loading || !input.trim() ? "not-allowed" : "pointer", whiteSpace: "nowrap" }}
             >
-              {loading ? "Paying..." : "Send $0.01"}
+              {loading ? "Paying..." : "Send 0.01"}
             </button>
           </div>
         )}

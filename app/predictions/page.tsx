@@ -48,20 +48,20 @@ export default function PredictionsPage() {
     setBettingSide(side);
     try {
       const { createWalletClient, custom, defineChain, parseUnits } = await import("viem");
-      const xlayer = defineChain({
-        id: 196,
-        name: "X Layer",
+      const ogChain = defineChain({
+        id: 16661,
+        name: "0G Mainnet",
         nativeCurrency: { name: "OKB", symbol: "OKB", decimals: 18 },
-        rpcUrls: { default: { http: ["https://rpc.xlayer.tech"] } },
+        rpcUrls: { default: { http: ["https://rpc.ogChain.tech"] } },
       });
       const walletClient = createWalletClient({
-        chain: xlayer,
+        chain: ogChain,
         transport: custom(window.ethereum),
       });
       await window.ethereum.request({ method: "eth_requestAccounts" });
       const accounts = await window.ethereum.request({ method: "eth_accounts" }) as string[];
       const address = accounts[0] as `0x${string}`;
-      const USDC = "0x74b7F16337b8972027F6196A17a631aC6dE26d22" as `0x${string}`;
+      const A0GI = "process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT" as `0x${string}`;
       const RECIPIENT = process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT as `0x${string}`;
       const AMOUNT = parseUnits("0.01", 6);
       const paddedRecipient = RECIPIENT.slice(2).padStart(64, "0");
@@ -69,9 +69,9 @@ export default function PredictionsPage() {
       const data = ("0xa9059cbb" + paddedRecipient + paddedAmount) as `0x${string}`;
       const hash = await walletClient.sendTransaction({
         account: address,
-        to: USDC,
+        to: A0GI,
         data,
-        chain: xlayer,
+        chain: ogChain,
       });
       await fetch("/api/predictions/bet", {
         method: "POST",
@@ -128,11 +128,11 @@ export default function PredictionsPage() {
 
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "48px 24px 80px" }}>
         <div style={{ display: "inline-block", background: "#f59e0b20", border: "1px solid #f59e0b33", borderRadius: 20, padding: "4px 14px", fontSize: 12, color: "#f59e0b", marginBottom: 20 }}>
-          AI predictions · USDC betting · Auto settlement
+          AI predictions · A0GI betting · Auto settlement
         </div>
         <h1 style={{ fontSize: 36, fontWeight: 800, marginBottom: 8, color: "#e8e8f0" }}>Prediction Market</h1>
         <p style={{ fontSize: 15, color: "#6b7280", marginBottom: 32, lineHeight: 1.6 }}>
-          An AI agent analyzes live OKX price data and makes 24-hour predictions. Bet USDC on YES or NO. Winners get paid automatically onchain.
+          An AI agent analyzes live crypto price data and makes 24-hour predictions. Bet A0GI on YES or NO. Winners get paid automatically onchain.
         </p>
 
         <button
@@ -195,8 +195,8 @@ export default function PredictionsPage() {
 
                   <div style={{ marginBottom: 16 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6b7280", marginBottom: 6 }}>
-                      <span>YES {yesPercent}% · ${(pred.yesPool ?? 0).toFixed(2)} USDC</span>
-                      <span>NO {noPercent}% · ${(pred.noPool ?? 0).toFixed(2)} USDC</span>
+                      <span>YES {yesPercent}% · ${(pred.yesPool ?? 0).toFixed(2)} A0GI</span>
+                      <span>NO {noPercent}% · ${(pred.noPool ?? 0).toFixed(2)} A0GI</span>
                     </div>
                     <div style={{ height: 8, background: "#0a0a0f", borderRadius: 4, overflow: "hidden" }}>
                       <div style={{ height: "100%", width: yesPercent + "%", background: "linear-gradient(90deg, #22c55e, #16a34a)", borderRadius: 4 }} />
@@ -214,14 +214,14 @@ export default function PredictionsPage() {
                             disabled={bettingId === pred.id}
                             style={{ flex: 1, padding: "10px", borderRadius: 10, border: "1px solid #22c55e", background: "#22c55e20", color: "#22c55e", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
                           >
-                            {bettingId === pred.id && bettingSide === "yes" ? "Betting..." : "YES $0.01"}
+                            {bettingId === pred.id && bettingSide === "yes" ? "Betting..." : "YES 0.01"}
                           </button>
                           <button
                             onClick={() => placeBet(pred.id, "no")}
                             disabled={bettingId === pred.id}
                             style={{ flex: 1, padding: "10px", borderRadius: 10, border: "1px solid #f87171", background: "#f8717120", color: "#f87171", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
                           >
-                            {bettingId === pred.id && bettingSide === "no" ? "Betting..." : "NO $0.01"}
+                            {bettingId === pred.id && bettingSide === "no" ? "Betting..." : "NO 0.01"}
                           </button>
                           {isSettleable && (
                             <button

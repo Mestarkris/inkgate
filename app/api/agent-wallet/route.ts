@@ -1,60 +1,19 @@
-/**
- * app/api/agent-wallet/route.ts
- * Agentic Wallet — onchain identity endpoint for InkGate agents.
- *
- * Requirement: "Create an Agentic Wallet as your project's onchain identity."
- *
- * GET /api/agent-wallet          — returns all agent identities + live balances
- * GET /api/agent-wallet?id=1     — returns specific agent identity
- */
-import { createPublicClient, http, formatUnits } from "viem";
-import { defineChain } from "viem";
+import { createPublicClient, http, formatUnits, defineChain } from "viem";
 
-const xlayer = defineChain({
-  id: 196,
-  name: "X Layer",
-  nativeCurrency: { name: "OKB", symbol: "OKB", decimals: 18 },
-  rpcUrls: { default: { http: ["https://rpc.xlayer.tech"] } },
-  blockExplorers: {
-    default: { name: "OKLink", url: "https://www.oklink.com/xlayer" },
-  },
+const ogChain = defineChain({
+  id: 16661,
+  name: "0G Mainnet",
+  nativeCurrency: { name: "A0GI", symbol: "A0GI", decimals: 18 },
+  rpcUrls: { default: { http: ["https://evmrpc.0g.ai"] } },
+  blockExplorers: { default: { name: "0G Explorer", url: "https://chainscan.0g.ai" } },
 });
 
-const USDC_ADDRESS = "0x74b7F16337b8972027F6196A17a631aC6dE26d22" as `0x${string}`;
-
-const ERC20_BALANCE_ABI = [
-  {
-    name: "balanceOf",
-    type: "function",
-    stateMutability: "view",
-    inputs: [{ name: "account", type: "address" }],
-    outputs: [{ name: "", type: "uint256" }],
-  },
-] as const;
-
-async function getUSDCBalance(address: `0x${string}`): Promise<string> {
+async function getA0GIBalance(address: `0x${string}`): Promise<string> {
   try {
-    const client = createPublicClient({ chain: xlayer, transport: http("https://rpc.xlayer.tech") });
-    const balance = await client.readContract({
-      address: USDC_ADDRESS,
-      abi: ERC20_BALANCE_ABI,
-      functionName: "balanceOf",
-      args: [address],
-    });
-    return formatUnits(balance, 6);
-  } catch {
-    return "unavailable";
-  }
-}
-
-async function getOKBBalance(address: `0x${string}`): Promise<string> {
-  try {
-    const client = createPublicClient({ chain: xlayer, transport: http("https://rpc.xlayer.tech") });
+    const client = createPublicClient({ chain: ogChain, transport: http("https://evmrpc.0g.ai") });
     const balance = await client.getBalance({ address });
     return formatUnits(balance, 18);
-  } catch {
-    return "unavailable";
-  }
+  } catch { return "unavailable"; }
 }
 
 export async function GET(req: Request) {
@@ -62,73 +21,32 @@ export async function GET(req: Request) {
   const agentId = searchParams.get("id");
 
   const agents = [
-    {
-      id: "orchestrator",
-      name: "InkGate Orchestrator",
-      role: "Receives user payments and routes USDC to sub-agents. Controls the full pipeline.",
-      address: process.env.PAYMENT_RECIPIENT_ADDRESS as `0x${string}`,
-      capabilities: ["payment-routing", "pipeline-orchestration", "nft-minting"],
-      pricePerCall: "0.01 USDC",
-      explorer: `https://www.oklink.com/xlayer/address/${process.env.PAYMENT_RECIPIENT_ADDRESS}`,
-    },
-    {
-      id: "research",
-      name: "InkGate Research Agent",
-      role: "Pulls live OKX market data and crypto news, produces research notes.",
-      address: process.env.AGENT1_ADDRESS as `0x${string}`,
-      capabilities: ["market-data", "news-fetch", "research"],
-      pricePerCall: "0.004 USDC",
-      explorer: `https://www.oklink.com/xlayer/address/${process.env.AGENT1_ADDRESS}`,
-    },
-    {
-      id: "factcheck",
-      name: "InkGate Fact Check Agent",
-      role: "Verifies research claims and flags outdated or incorrect information.",
-      address: process.env.AGENT2_ADDRESS as `0x${string}`,
-      capabilities: ["fact-checking", "verification"],
-      pricePerCall: "0.003 USDC",
-      explorer: `https://www.oklink.com/xlayer/address/${process.env.AGENT2_ADDRESS}`,
-    },
-    {
-      id: "writer",
-      name: "InkGate Writer Agent",
-      role: "Writes the final article from verified research. Signs off as InkGate Research.",
-      address: process.env.AGENT3_ADDRESS as `0x${string}`,
-      capabilities: ["content-writing", "article-generation"],
-      pricePerCall: "0.003 USDC",
-      explorer: `https://www.oklink.com/xlayer/address/${process.env.AGENT3_ADDRESS}`,
-    },
+    { id: "orchestrator", name: "InkGate Orchestrator", role: "Routes payments and orchestrates the full agent pipeline on 0G.", address: process.env.PAYMENT_RECIPIENT_ADDRESS as `0x${string}`, capabilities: ["payment-routing", "pipeline-orchestration", "nft-minting", "0g-storage"], pricePerCall: "0.01 A0GI", explorer: `https://chainscan.0g.ai/address/${process.env.PAYMENT_RECIPIENT_ADDRESS}` },
+    { id: "research", name: "InkGate Research Agent", role: "Fetches live crypto data and news, produces research notes.", address: process.env.AGENT1_ADDRESS as `0x${string}`, capabilities: ["market-data", "news-fetch", "research", "0g-memory"], pricePerCall: "0.004 A0GI", explorer: `https://chainscan.0g.ai/address/${process.env.AGENT1_ADDRESS}` },
+    { id: "factcheck", name: "InkGate Fact Check Agent", role: "Verifies research claims via 0G TEE inference.", address: process.env.AGENT2_ADDRESS as `0x${string}`, capabilities: ["fact-checking", "verification", "tee-inference"], pricePerCall: "0.003 A0GI", explorer: `https://chainscan.0g.ai/address/${process.env.AGENT2_ADDRESS}` },
+    { id: "writer", name: "InkGate Writer Agent", role: "Writes final articles, stores them permanently on 0G Storage.", address: process.env.AGENT3_ADDRESS as `0x${string}`, capabilities: ["content-writing", "article-generation", "0g-storage"], pricePerCall: "0.003 A0GI", explorer: `https://chainscan.0g.ai/address/${process.env.AGENT3_ADDRESS}` },
   ];
 
-  const filtered = agentId
-    ? agents.filter((a) => a.id === agentId)
-    : agents;
+  const filtered = agentId ? agents.filter(a => a.id === agentId) : agents;
+  if (agentId && filtered.length === 0) return Response.json({ error: "Agent not found" }, { status: 404 });
 
-  if (agentId && filtered.length === 0) {
-    return Response.json({ error: "Agent not found" }, { status: 404 });
-  }
-
-  // Fetch live balances for each agent in parallel
   const withBalances = await Promise.all(
     filtered.map(async (agent) => {
-      if (!agent.address) return { ...agent, balances: { usdc: "no address set", okb: "no address set" } };
-      const [usdc, okb] = await Promise.all([
-        getUSDCBalance(agent.address),
-        getOKBBalance(agent.address),
-      ]);
-      return { ...agent, balances: { usdc, okb } };
+      if (!agent.address) return { ...agent, balances: { a0gi: "no address set" } };
+      const a0gi = await getA0GIBalance(agent.address);
+      return { ...agent, balances: { a0gi } };
     })
   );
 
   return Response.json({
-    network: "X Layer Mainnet",
-    chainId: 196,
+    network: "0G Mainnet",
+    chainId: 16602,
     protocol: "InkGate Agentic Wallet",
-    description: "Autonomous AI agents with onchain wallet identities on X Layer",
+    description: "Autonomous AI agents with onchain wallet identities on 0G",
     agents: withBalances,
-    usdcContract: USDC_ADDRESS,
-    explorer: "https://www.oklink.com/xlayer",
+    explorer: "https://chainscan.0g.ai",
+    ogStorage: "https://indexer-storage-turbo.0g.ai",
+    ogCompute: "https://compute-marketplace.0g.ai",
     updatedAt: new Date().toISOString(),
   });
 }
-

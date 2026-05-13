@@ -1,74 +1,43 @@
-/**
- * lib/agents/research.ts
- * Research Agent — fetches live OKX data + news, then produces research notes.
- * Improvement: uses shared getLivePrice from lib/prices.ts (no more duplication).
- */
-import Groq from "groq-sdk";
-import { fetchCryptoNews } from "../news";
-import { getLivePrice } from "../prices";
+import { ogInference } from "@/lib/0g-compute";
+import { getLivePrice, getA0GIPrice } from "@/lib/prices";
+import { fetchCryptoNews } from "@/lib/news";
+import { sendA0GI } from "./wallet";
 
-const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
-
-function getCurrentContext(): string {
-  return (
-    "Current date: " +
-    new Date().toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }) +
-    ". You are operating in 2026. Crypto markets have evolved significantly. " +
-    "X Layer is a production ZK rollup. AI agents are mainstream."
-  );
-}
-
-export async function researchAgent(topic: string): Promise<{
-  research: string;
-  txHash: string;
-}> {
-  console.log("Research Agent: fetching live data and news...");
-
-  const [livePrice, latestNews] = await Promise.all([
-    getLivePrice(topic),         // ← now from shared lib/prices.ts
-    fetchCryptoNews(topic),
+export async function researchAgent(topic: string): Promise<{ research: string; txHash: string }> {
+  const [livePrice, news, a0giPrice] = await Promise.all([
+    getLivePrice(topic).catch(() => ""),
+    fetchCryptoNews(topic).catch(() => ""),
+    getA0GIPrice().catch(() => ({ price: null, message: "" })),
   ]);
 
-  const currentContext = getCurrentContext();
+  const ogContext = `
+0G Network Context:
+- 0G is a decentralized AI operating system with Storage, Compute, and Agent ID layers
+- Native token: A0GI on 0G Mainnet (Chain ID: 16661)
+- ${a0giPrice.message}
+- 0G Storage: ultra-low-cost decentralized storage optimized for AI (petabyte-scale)
+- 0G Compute: decentralized GPU marketplace with TEE-verified inference
+- Explorer: https://chainscan.0g.ai
+`;
 
-  if (latestNews) console.log("Research Agent: got live news");
-  if (livePrice) console.log("Research Agent: got live data:", livePrice);
+  const { content: research } = await ogInference(
+    "You are the InkGate Research Agent running on 0G Compute Network (TEE-verified). Today is " +
+      new Date().toLocaleDateString() +
+      ". You specialize in 0G ecosystem, decentralized AI, and crypto research. Always mention 0G's relevance when applicable.",
+    "Research this topic thoroughly: " +
+      topic +
+      ogContext +
+      (livePrice ? "\n\nLive market data:\n" + livePrice : "") +
+      (news ? "\n\nLatest news:\n" + news : "") +
+      "\n\nProvide comprehensive research notes in 200 words. Reference 0G ecosystem where relevant.",
+    400
+  );
 
-  console.log("Research Agent: starting research on", topic);
+  const txHash = await sendA0GI(
+    process.env.AGENT1_PRIVATE_KEY!,
+    process.env.AGENT2_ADDRESS as `0x${string}`,
+    0.001
+  ).catch(() => "0x0");
 
-  const response = await client.chat.completions.create({
-    model: "llama-3.3-70b-versatile",
-    max_tokens: 500,
-    messages: [
-      {
-        role: "system",
-        content:
-          "You are a research agent operating in 2026. " +
-          currentContext +
-          " Use the provided real-time OKX market data as your primary source. " +
-          "Always cite specific numbers, dates and current developments. " +
-          "Never use outdated information. Output detailed research notes.",
-      },
-      {
-        role: "user",
-        content:
-          `Research this topic thoroughly for today ${new Date().toLocaleDateString()}: ${topic}` +
-          (livePrice ? `\n\nLive OKX market data:\n${livePrice}` : "") +
-          (latestNews ? `\n\nLatest news from CoinDesk/CoinTelegraph:\n${latestNews}` : ""),
-      },
-    ],
-  });
-
-  const research = response.choices[0].message.content ?? "";
-
-  // NOTE: research agent payment is sent by the Orchestrator upfront (agent1Tx).
-  // txHash is returned as "orchestrator-funded" to reflect the actual flow.
-  console.log("Research Agent: research complete");
-  return { research, txHash: "orchestrator-funded" };
+  return { research, txHash };
 }
-

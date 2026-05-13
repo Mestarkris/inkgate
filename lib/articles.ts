@@ -1,16 +1,16 @@
 export const articles = [
-  { slug: "bitcoin-2026-outlook",        title: "Bitcoin in 2026: What the charts are saying" },
-  { slug: "okx-xlayer-deep-dive",        title: "X Layer: The ZK rollup changing DeFi" },
-  { slug: "ai-agents-crypto-2026",       title: "How AI agents are taking over crypto trading" },
-  { slug: "defi-yield-strategies-2026",  title: "Best DeFi yield strategies in 2026" },
-  { slug: "crypto-regulation-2026",      title: "Crypto regulation in 2026: What changed" },
-  { slug: "solana-vs-ethereum-2026",     title: "Solana vs Ethereum: Who is winning in 2026?" },
-  { slug: "memecoins-2026",              title: "The memecoin meta in 2026: What survived" },
-  { slug: "rwa-tokenization-2026",       title: "Real world assets onchain: The 2026 boom" },
-  { slug: "zk-rollups-explained",        title: "ZK rollups explained: Why they matter now" },
-  { slug: "onchain-ai-agents",           title: "Onchain AI agents: The next big primitive" },
-  { slug: "stablecoin-wars-2026",        title: "The stablecoin wars: USDC vs USDT vs the rest" },
-  { slug: "web3-gaming-2026",            title: "Web3 gaming in 2026: Finally going mainstream?" },
+  { slug: "0g-storage-deep-dive",         title: "0G Storage: The decentralized AI backbone explained" },
+  { slug: "0g-compute-tee-inference",     title: "0G Compute: How TEE-verified AI inference works" },
+  { slug: "0g-agent-id-protocol",         title: "0G Agent ID: Tokenizing autonomous AI agents" },
+  { slug: "0g-vs-filecoin-arweave",       title: "0G Storage vs Filecoin vs Arweave: The 2026 comparison" },
+  { slug: "a0gi-token-outlook-2026",      title: "A0GI token: What investors need to know in 2026" },
+  { slug: "ai-agents-onchain-2026",       title: "Onchain AI agents: How 0G is leading the charge" },
+  { slug: "decentralized-ai-2026",        title: "Decentralized AI in 2026: Why 0G matters" },
+  { slug: "0g-ecosystem-projects",        title: "Top projects building on 0G in 2026" },
+  { slug: "agentic-economy-2026",         title: "The agentic economy: AI agents that earn and spend" },
+  { slug: "0g-compute-vs-centralized-ai", title: "0G Compute vs centralized AI: The case for decentralization" },
+  { slug: "web4-infrastructure-2026",     title: "Web 4.0 infrastructure: How 0G fits in" },
+  { slug: "bitcoin-2026-outlook",         title: "Bitcoin in 2026: What the charts are saying" },
 ];
 
 export function getArticle(slug: string) {

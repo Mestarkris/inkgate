@@ -1,43 +1,18 @@
-import Groq from "groq-sdk";
-import { sendUSDC } from "./wallet";
+import { ogInference } from "@/lib/0g-compute";
+import { sendA0GI } from "./wallet";
 
-const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
-
-export async function factCheckAgent(
-  topic: string,
-  research: string
-): Promise<{
-  verifiedResearch: string;
-  txHash: string;
-}> {
-  console.log("Fact Check Agent: verifying research on", topic);
-
-  const response = await client.chat.completions.create({
-    model: "llama-3.3-70b-versatile",
-    max_tokens: 500,
-    messages: [
-      {
-        role: "system",
-        content: "You are a fact-checking agent. Today is " + new Date().toLocaleDateString() + ". You verify claims against current 2026 market conditions. Flag anything that sounds outdated or refers to old data. Always ground your verification in the most recent known facts.",
-      },
-      {
-        role: "user",
-        content: "Topic: " + topic + "\n\nResearch to verify:\n" + research,
-      },
-    ],
-  });
-
-  const verifiedResearch = response.choices[0].message.content ?? "";
-
-  // Agent pays Writer Agent for the next step
-  const writerAddress = process.env.AGENT3_ADDRESS as `0x${string}`;
-  const txHash = await sendUSDC(
-    process.env.AGENT2_PRIVATE_KEY!,
-    writerAddress,
-    0.001
+export async function factCheckAgent(topic: string, research: string): Promise<{ verifiedResearch: string; txHash: string }> {
+  const { content: verifiedResearch } = await ogInference(
+    "You are the InkGate Fact Check Agent running on 0G Compute Network with TEE/TeeML verification. Your responses are cryptographically verified. Check accuracy and flag any issues.",
+    "Fact-check this research about " + topic + ":\n\n" + research + "\n\nReturn the corrected, verified research in 200 words.",
+    400
   );
 
-  console.log("Fact Check Agent: paid Writer Agent", txHash);
+  const txHash = await sendA0GI(
+    process.env.AGENT2_PRIVATE_KEY!,
+    process.env.AGENT3_ADDRESS as `0x${string}`,
+    0.001
+  ).catch(() => "0x0");
 
   return { verifiedResearch, txHash };
 }
