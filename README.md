@@ -1,280 +1,111 @@
-# InkGate
+# InkGate — AI-Powered Publishing on 0G Network
 
-> 3 autonomous AI agents research, fact-check and write articles — paying each other in USDC on X Layer.
+> **0G APAC Hackathon 2026 — Track 3: Agentic Economy & Autonomous Applications**
 
-**Live Demo:** https://inkgate.vercel.app  
-**GitHub:** https://github.com/Mestarkris/inkgate  
-**Agent Registry:** https://inkgate.vercel.app/api/registry  
-**Agentic Wallet:** https://inkgate.vercel.app/api/agent-wallet  
-**Swap Quotes:** https://inkgate.vercel.app/api/swap?from=OKB&to=USDC&amount=1
+InkGate is a fully autonomous AI publishing platform where 4 onchain agents research, fact-check, write, and get paid — all on the 0G Network.
 
----
+## 🔗 Live Demo
+- **App**: http://95.179.186.20:3000
+- **Agent IDs**: http://95.179.186.20:3000/api/agent-id
+- **Registry**: http://95.179.186.20:3000/api/registry
+- **Explorer**: https://chainscan.0g.ai
 
-## Project Introduction
+## 0G Integrations
 
-InkGate is a multi-agent AI content platform where autonomous agents collaborate, verify, and create crypto content — all while paying each other onchain in USDC on X Layer mainnet.
+### 1. 0G Storage
+Every generated article is stored permanently on 0G's decentralized storage layer.
+Agent state, stats, and prediction market data all persist on 0G Storage.
+lib/0g.ts → storeArticle(), storeAgentStats(), storePrediction()
 
-A user pays $0.01 USDC once. The Orchestrator Agent receives the payment and autonomously splits it to 3 specialist AI agents. Each agent completes its task and pays the next agent onchain — no human involvement, no custodians.
+### 2. 0G Compute Network (TEE-verified Inference)
+All 4 agents run inference via 0G Compute using `qwen/qwen-2.5-7b-instruct`.
+Every inference call is TEE/TeeML verified — cryptographically proven output.
+lib/0g-compute.ts → ogInference()
+Provider: 0xa48f01287233509FD694a22Bf840225062E67836
 
----
+### 3. 0G Agent ID
+All 4 agents have tokenized identities stored on 0G Storage via the Agent ID protocol.
+Each agent has: name, role, address, capabilities, pricePerCall.
+app/api/agent-id → bootstrapAgentIdentities()
+GET /api/agent-id → returns all 4 agent identities
 
-## Architecture Overview
+### 4. 0G Mainnet (Chain ID: 16661)
+- Native token: A0GI
+- All payments in A0GI
+- Agent wallets on 0G chain
+- Transactions verifiable on https://chainscan.0g.ai
 
-```
-User
-  │
-  │  $0.01 USDC (X Layer mainnet)
-  ▼
-┌─────────────────────────────────┐
-│       Orchestrator Agent        │  ← Agentic Wallet (onchain identity)
-│  Wallet: PAYMENT_RECIPIENT_ADDR │
-└────────┬───────┬────────────────┘
-         │       │
-    $0.004│  $0.003│  $0.003
-         ▼       ▼       ▼
-  ┌──────────┐ ┌──────────┐ ┌──────────┐
-  │ Research │ │FactCheck │ │  Writer  │
-  │  Agent   │ │  Agent   │ │  Agent   │
-  │ Agent 1  │ │ Agent 2  │ │ Agent 3  │
-  └────┬─────┘ └────┬─────┘ └──────────┘
-       │             │
-  OKX Market    Verifies
-  API + News    Research
-  Live Data
-       │
-       └──────────► FactCheck ──────────► Writer
-                                              │
-                                              ▼
-                                      Final Article
-                                      + NFT Minted
-                                      + 5 TX Hashes
-```
+## Agent Pipeline
+User pays 0.01 A0GI
+↓
+Orchestrator (0x1ba8...)
+├→ Research Agent (0xe319...) — 0G Compute inference + live data
+├→ Fact Check Agent (0x655C...) — TEE-verified verification
+└→ Writer Agent (0x5FfB...) — final article + 0G Storage
 
-### Agent Roles
+## Features
 
-| Agent | Address | Role | Receives |
-|---|---|---|---|
-| Orchestrator | `PAYMENT_RECIPIENT_ADDRESS` | Routes payment, mints NFT | $0.01 from user |
-| Research Agent | `AGENT1_ADDRESS` | Live OKX data + news research | $0.004 |
-| Fact Check Agent | `AGENT2_ADDRESS` | Verifies research accuracy | $0.003 |
-| Writer Agent | `AGENT3_ADDRESS` | Writes final article | $0.003 |
-
-**Agentic Wallet endpoint:** `/api/agent-wallet` — returns live onchain balances and identities for all 4 agents.
-
----
-
-## Onchain OS & Uniswap Skill Usage
-
-### OKX DEX Aggregator (Uniswap / Onchain OS Swap Skill)
-
-InkGate integrates the OKX DEX aggregator to provide token swap quotes directly on X Layer.
-
-**Endpoint:** `GET /api/swap?from=OKB&to=USDC&amount=1`
-
-```json
-{
-  "quote": {
-    "fromToken": "OKB",
-    "toToken": "USDC",
-    "fromAmount": "1",
-    "toAmount": "48.23",
-    "priceImpact": "< 0.01",
-    "router": "OKX DEX Aggregator",
-    "chainId": "196"
-  },
-  "network": "X Layer Mainnet"
-}
-```
-
-Swap quotes are fed into the Research Agent's context so articles on DeFi topics include live swap rate data.
-
-### OKX Market API (Onchain OS Market Data Skill)
-
-All agents consume live OKX market data via `/api/v5/market/ticker`:
-- Real-time prices for 50+ tokens
-- 24h high / low / change
-- Used in: Research Agent, Fact Check Agent, Predictor Agent, Chat Agents
-
-### x402 Protocol (Onchain OS Payment Skill)
-
-Every API endpoint is payment-gated using the [x402 protocol](https://x402.org):
-- HTTP 402 response with `X-PAYMENT` header requirement
-- Payments verified onchain via X Layer RPC (`eth_getTransactionReceipt`)
-- 5 verifiable transaction hashes returned per article unlock
-
-### OKX Wallet API (Onchain OS Wallet Skill)
-
-- Live agent wallet balance queries at `/api/agent-wallet`
-- Agents tip users back via `sendUSDC()` after chat interactions
-- USDC transfers encoded manually via ERC-20 ABI (`0xa9059cbb`)
-
----
-
-## Working Mechanics
-
-### 1. Article Pipeline
-
-1. User connects OKX Wallet and pays $0.01 USDC on X Layer
-2. Frontend sends `X-PAYMENT: <txHash>` header to `/api/article/[slug]`
-3. Orchestrator verifies payment via X Layer RPC
-4. Orchestrator splits: Research ($0.004), FactCheck ($0.003), Writer ($0.003)
-5. Research Agent fetches live OKX prices + CoinDesk/CoinTelegraph RSS
-6. Fact Check Agent verifies the research
-7. Writer Agent produces the final article
-8. Article NFT minted to reader's wallet address
-9. Response includes article + 5 onchain TX hashes
-
-### 2. Agent Chat
-
-- Pay per message with USDC
-- Agent fetches live price data for your query
-- Agent tips you back 0.001 USDC automatically
-
-### 3. Prediction Market
-
-- AI predicts 24h price direction for BTC/ETH/OKB/SOL
-- Users bet USDC on Yes/No
-- Auto-settlement at expiry via Predictor Agent
-
-### 4. Agent Debate
-
-- Bull Agent and Bear Agent argue any crypto topic
-- Judge Agent declares winner
-- Each agent pays the Judge Agent onchain
-
-### 5. Swap Quotes (new)
-
-- `/api/swap` returns live DEX swap quotes for any X Layer token pair
-- Powered by OKX DEX Aggregator
-- Integrated into agent research context for DeFi articles
-
----
-
-## Deployment
-
-| Component | URL |
-|---|---|
-| Live App | https://inkgate.vercel.app |
-| Agent Registry | https://inkgate.vercel.app/api/registry |
-| Agentic Wallet | https://inkgate.vercel.app/api/agent-wallet |
-| Swap API | https://inkgate.vercel.app/api/swap |
-| Prediction Market | https://inkgate.vercel.app/predictions |
-| Article Pipeline | https://inkgate.vercel.app/article/[slug] |
-
-**Deployment transaction:**  
-`0x3943fe4c8ff30770560421d8f0fba34954b0fad9d55c1c3292aeca5bc79ee35b`  
-Network: X Layer Mainnet (Chain ID: 196)  
-Explorer: https://www.oklink.com/xlayer
-
----
-
-## X Layer Ecosystem Integration
-
-- **Chain ID:** 196 — X Layer Mainnet
-- **Payment token:** USDC (`0x74b7F16337b8972027F6196A17a631aC6dE26d22`)
-- **Native currency:** OKB
-- **RPC:** `https://rpc.xlayer.tech`
-- **Explorer:** https://www.oklink.com/xlayer
-- **Wallet:** OKX Wallet (primary)
-
-InkGate is purpose-built for X Layer. All agent wallets, payments, NFT mints, and swap quotes run exclusively on X Layer mainnet. The platform demonstrates a real-world use case: AI agents as autonomous economic actors that earn, spend, and interact with DeFi on X Layer.
-
----
+| Feature | Description | 0G Component |
+|---|---|---|
+| Pay-per-article | 0.01 A0GI unlocks full AI article | 0G Chain + Storage |
+| Custom articles | Any topic, researched live | 0G Compute |
+| Agent chat | Talk to any agent, pay per message | 0G Compute + Chain |
+| AI Debates | 3 agents debate any topic | 0G Compute |
+| Predictions | AI price predictions + A0GI betting | 0G Storage |
+| Agent registry | All agents exposed as AaaS | 0G Agent ID |
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | Next.js 15 (App Router) |
-| AI | Groq API — llama-3.3-70b-versatile |
-| Blockchain | X Layer Mainnet (Chain ID: 196) |
-| Payments | x402 protocol + viem |
-| DEX | OKX DEX Aggregator |
-| Market Data | OKX Market API v5 |
-| News | CoinDesk + CoinTelegraph RSS |
-| Storage | Upstash Redis |
-| Wallet | OKX Wallet |
-| Deploy | Vercel |
+- **Frontend**: Next.js 16, React 19, RainbowKit
+- **Chain**: 0G Mainnet (Chain ID: 16661)
+- **Storage**: 0G Storage SDK (`@0glabs/0g-ts-sdk`)
+- **Compute**: 0G Compute SDK (`@0gfoundation/0g-compute-ts-sdk`)
+- **Inference**: qwen/qwen-2.5-7b-instruct (TEE/TeeML verified)
+- **Wallets**: viem + ethers.js
 
----
+## API Endpoints
+GET  /api/agent-id          — 0G Agent ID registry
+GET  /api/agent-wallet      — Live A0GI balances on 0G
+GET  /api/registry          — Agent-as-a-Service catalog
+GET  /api/article/[slug]    — Pay-gated article generation
+POST /api/custom            — Custom topic article
+POST /api/chat              — Agent chat
+POST /api/debate            — AI agent debate
+GET  /api/predictions       — Prediction market
+POST /api/predictions       — Generate new prediction
+GET  /api/stats             — Platform stats (stored on 0G)
+GET  /api/trending          — Trending crypto topics
 
-## Local Development
-
-```bash
-# 1. Clone
-git clone https://github.com/Mestarkris/inkgate.git
-cd inkgate
-
-# 2. Install
-npm install --legacy-peer-deps
-
-# 3. Configure environment
-cp .env.example .env.local
-# Fill in your keys (see below)
-
-# 4. Run
-npm run dev
-```
-
-### Environment Variables
+## Environment Variables
 
 ```env
-GROQ_API_KEY=
-NEXT_PUBLIC_CHAIN_ID=196
-NEXT_PUBLIC_NETWORK=mainnet
+# AI
+GROQ_API_KEY=                    # Fallback inference
 
-# Orchestrator wallet
+# 0G Network
+OG_RPC_URL=https://evmrpc.0g.ai
+OG_INDEXER_URL=https://indexer-storage-turbo.0g.ai
+OG_CHAIN_ID=16661
+OG_PRIVATE_KEY=                  # Orchestrator key
+
+# Agent Wallets (0G Mainnet)
 PAYMENT_RECIPIENT_ADDRESS=
 PAYMENT_RECIPIENT_PRIVATE_KEY=
-NEXT_PUBLIC_PAYMENT_RECIPIENT=
-
-# Agent wallets
-AGENT1_ADDRESS=
+AGENT1_ADDRESS=                  # Research
 AGENT1_PRIVATE_KEY=
-AGENT2_ADDRESS=
+AGENT2_ADDRESS=                  # FactCheck
 AGENT2_PRIVATE_KEY=
-AGENT3_ADDRESS=
+AGENT3_ADDRESS=                  # Writer
 AGENT3_PRIVATE_KEY=
-NEXT_PUBLIC_AGENT1_ADDRESS=
-NEXT_PUBLIC_AGENT2_ADDRESS=
-NEXT_PUBLIC_AGENT3_ADDRESS=
-
-# OKX API (for DEX + market data)
-OKX_API_KEY=
-OKX_SECRET_KEY=
-OKX_PASSPHRASE=
-
-# Upstash Redis (for prediction market)
-UPSTASH_REDIS_REST_URL=
-UPSTASH_REDIS_REST_TOKEN=
 ```
 
----
+## Track 3 Alignment
+
+**Financial Rails**: Micropayments (0.01 A0GI/article), automated agent payment splitting, revenue sharing across 4 autonomous wallets.
+
+**AI Commerce**: Pay-per-article marketplace, Agent-as-a-Service via `/api/registry`, prediction market with A0GI betting.
+
+**Operational Tools**: Self-custodial agent wallets on 0G chain, Agent ID tokenization, autonomous orchestration without human intervention.
 
 ## Team
-
-| Name | Role |
-|---|---|
-| Mestarkris | Founder, Full-Stack Developer |
-
----
-
-## Project Positioning in X Layer Ecosystem
-
-InkGate occupies a unique position in the X Layer ecosystem as the **first AI agent network where agents are economic participants** — not just tools.
-
-Unlike traditional AI platforms where agents are stateless API calls, InkGate agents:
-- **Hold wallets** with real USDC balances on X Layer
-- **Earn fees** for their services autonomously
-- **Spend onchain** by paying downstream agents
-- **Mint NFTs** for content they produce
-- **Quote DeFi swaps** via OKX DEX aggregator
-
-This creates a blueprint for **agent-native DeFi** on X Layer: AI agents that participate in the economy the same way humans do, using the same infrastructure — OKX Wallet, USDC, X Layer RPC, and OKX DEX.
-
----
-
-## License
-
-MIT
-
+Built for the 0G APAC Hackathon 2026
