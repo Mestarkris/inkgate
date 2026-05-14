@@ -40,7 +40,7 @@ export default function Home() {
         .btn-secondary{background:transparent;color:var(--text);padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;border:1px solid var(--border);cursor:pointer;font-family:var(--font)}
         .btn-primary:hover{background:#6a5ef0}
         .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
-        .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:48px}
+        .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:48px}@media(max-width:600px){.stats-row{grid-template-columns:1fr}.hero h1{font-size:40px!important}.hero-sub{font-size:13px!important}.hero-actions{flex-direction:column}.btn-primary,.btn-secondary{width:100%;text-align:center}.articles-grid{grid-template-columns:1fr!important}.features{grid-template-columns:1fr!important}.og-grid{grid-template-columns:1fr!important}.pipeline{grid-template-columns:1fr!important}}
         .stat{background:var(--surface);padding:24px;text-align:center}
         .stat-val{font-size:32px;font-weight:800;letter-spacing:-1px;color:var(--text);font-family:var(--font)}
         .stat-val span{color:var(--accent)}

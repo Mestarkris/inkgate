@@ -16,10 +16,10 @@ export default function Layout({ children, heroContent }: { children: React.Reac
         .ig-nav-inner{display:flex;justify-content:space-between;align-items:center}
         .ig-logo{font-size:20px;font-weight:800;letter-spacing:-0.5px;font-family:var(--font);text-decoration:none;color:var(--text)}
         .ig-logo span{color:var(--accent)}
-        .ig-nav-links{display:flex;gap:24px;font-size:13px}
+        .ig-nav-links{display:flex;gap:24px;font-size:13px}@media(max-width:768px){.ig-nav-links{display:none}.ig-logo{font-size:18px}}
         .ig-nav-links a{color:var(--muted);text-decoration:none;font-family:var(--font);transition:color 0.2s}
         .ig-nav-links a:hover{color:var(--text)}
-        .ig-page-hero{position:relative;overflow:hidden;border-bottom:1px solid var(--border);min-height:180px}
+        .ig-page-hero{position:relative;overflow:hidden;border-bottom:1px solid var(--border);min-height:180px}@media(max-width:600px){.ig-page-hero-content{padding:32px 0 24px}.ig-page-hero h1{font-size:28px!important}.wrap{padding:0 16px!important}}
         .ig-page-hero-content{position:relative;z-index:2;padding:48px 0 36px}
         .ig-footer{padding:32px 0;text-align:center;color:var(--muted);font-size:12px;font-family:var(--mono);border-top:1px solid var(--border);background:var(--bg)}
         .ig-footer a{color:var(--accent);text-decoration:none}
@@ -46,7 +46,9 @@ export default function Layout({ children, heroContent }: { children: React.Reac
               <Link href="/predictions">Predictions</Link>
               <Link href="/agents">Agents</Link>
             </div>
-            <ConnectButton chainStatus="icon" showBalance={false} />
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <ConnectButton chainStatus="icon" showBalance={false} />
+            </div>
           </div>
         </div>
       </nav>
