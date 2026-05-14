@@ -11,6 +11,8 @@ export default function TrendingPage() {
 
   useEffect(() => {
     fetch("/api/trending").then(r => r.json()).then(d => setTrending(d.trending || [])).catch(() => {});
+    // Add A0GI placeholder to ticker
+    setTrending(prev => [{symbol:"A0GI",name:"0G Network",price:"—",change24h:"0",isA0GI:true},...prev]);
   }, []);
 
   const allArticles = [
@@ -53,11 +55,11 @@ export default function TrendingPage() {
           <p style={{color:"var(--muted)",fontSize:15,fontFamily:"var(--mono)",marginBottom:32}}>Written live by 3 agents · Stored forever on 0G Storage · 0.01 A0GI to unlock</p>
           {trending.length > 0 && (
             <div className="ticker">
-              {trending.slice(0,6).map((t:any,i:number) => (
+              {trending.slice(0,7).map((t:any,i:number) => (
                 <div key={i} className="tick">
-                  <div className="tick-sym">{t.symbol}</div>
-                  <div className="tick-val">${Number(t.price).toLocaleString()}</div>
-                  <div className={Number(t.change24h) >= 0 ? "tick-up" : "tick-down"}>{Number(t.change24h) >= 0 ? "▲" : "▼"} {Math.abs(Number(t.change24h))}%</div>
+                  <div className="tick-sym" style={t.isA0GI ? {color:"var(--accent)"} : {}}>{t.symbol}</div>
+                  <div className="tick-val" style={t.isA0GI ? {color:"var(--accent)"} : {}}>{t.isA0GI ? "A0GI" : "$"+Number(t.price).toLocaleString()}</div>
+                  <div className={t.isA0GI ? "tick-up" : Number(t.change24h) >= 0 ? "tick-up" : "tick-down"}>{t.isA0GI ? "● LIVE" : (Number(t.change24h) >= 0 ? "▲" : "▼")+" "+Math.abs(Number(t.change24h))+"%"}</div>
                 </div>
               ))}
             </div>
