@@ -1,17 +1,13 @@
 import type { Metadata } from "next";
-import "./globals.css";
 import { Providers } from "./providers";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "InkGate — Pay-per-Read AI Articles",
+  title: "InkGate — AI Research on 0G Network",
   description: "AI-generated articles powered by 0G Compute Network and 0G Storage",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
