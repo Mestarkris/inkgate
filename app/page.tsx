@@ -1,4 +1,6 @@
 "use client";
+import dynamic from "next/dynamic";
+const ParticleCanvas = dynamic(() => import("./components/ParticleCanvas"), { ssr: false });
 import { ConnectButton } from "./providers";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -82,7 +84,7 @@ export default function Home() {
 
       {/* NAV */}
       <nav>
-        <div className="wrap">
+        <div className="wrap" style={{position:"relative",zIndex:2}}>
           <div className="nav-inner">
             <div className="logo">Ink<span>Gate</span></div>
             <div className="nav-links">
@@ -97,7 +99,8 @@ export default function Home() {
       </nav>
 
       {/* HERO */}
-      <section className="hero">
+      <section className="hero" style={{position:"relative",overflow:"hidden"}}>
+      <ParticleCanvas />
         <div className="wrap">
           <div className="hero-badge"><span className="badge-dot"></span>Live on 0G Mainnet</div>
           <h1>AI research,<br /><em>pay to unlock.</em></h1>

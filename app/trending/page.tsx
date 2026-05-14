@@ -10,9 +10,19 @@ export default function TrendingPage() {
   const [trending, setTrending] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch("/api/trending").then(r => r.json()).then(d => setTrending(d.trending || [])).catch(() => {});
-    // Add A0GI placeholder to ticker
-    setTrending(prev => [{symbol:"A0GI",name:"0G Network",price:"—",change24h:"0",isA0GI:true},...prev]);
+    setTrending([
+      { symbol: "A0GI", name: "0G Network", price: "—", change24h: "0", isA0GI: true },
+      { symbol: "BTC", price: "83000", change24h: "1.2" },
+      { symbol: "ETH", price: "2258", change24h: "-1.91" },
+      { symbol: "BNB", price: "672", change24h: "-0.74" },
+      { symbol: "SOL", price: "147", change24h: "2.1" },
+      { symbol: "USDT", price: "1", change24h: "-0.01" },
+    ]);
+    fetch("/api/trending").then(r => r.json()).then(d => {
+      const coins = (d.trending || []).filter((t:any) => t.symbol !== "XRP" && t.symbol !== "USDC");
+      const a0gi = { symbol: "A0GI", name: "0G Network", price: "—", change24h: "0", isA0GI: true };
+      setTrending([a0gi, ...coins.slice(0, 6)]);
+    }).catch(() => {});
   }, []);
 
   const allArticles = [
@@ -31,7 +41,13 @@ export default function TrendingPage() {
   ];
 
   return (
-    <Layout>
+    <Layout heroContent={
+      <div>
+        <div className="section-label">ARTICLES</div>
+        <h1 style={{fontSize:40,fontWeight:800,letterSpacing:-1,marginBottom:12,fontFamily:"var(--font)"}}>0G ecosystem research</h1>
+        <p style={{color:"rgba(255,255,255,0.45)",fontSize:14,fontFamily:"var(--mono)"}}>Written live by 3 agents · Stored forever on 0G Storage · 0.01 A0GI to unlock</p>
+      </div>
+    }>
       <style>{`
         .trending-hero{padding:48px 0 32px;border-bottom:1px solid var(--border)}
         .trending-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:40px 0}
@@ -41,10 +57,11 @@ export default function TrendingPage() {
         .a-tag{font-size:9px;font-family:var(--mono);color:var(--accent);background:rgba(123,110,246,0.1);border:1px solid rgba(123,110,246,0.2);padding:2px 7px;border-radius:3px;display:inline-block;margin-bottom:10px}
         .a-title{font-size:13px;font-weight:600;line-height:1.5;margin-bottom:12px;color:var(--text);font-family:var(--font)}
         .a-price{font-size:11px;font-family:var(--mono);color:var(--accent2)}
-        .ticker{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px 20px;display:flex;gap:32px;overflow-x:auto;margin-bottom:32px}
-        .tick{text-align:center;min-width:80px}
-        .tick-sym{font-size:10px;font-family:var(--mono);color:var(--muted)}
-        .tick-val{font-size:14px;font-weight:700;font-family:var(--mono);color:var(--text)}
+        .ticker{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px 24px;display:flex;flex-direction:row;flex-wrap:nowrap;gap:0;overflow-x:auto;margin-bottom:32px;align-items:center}
+        .tick{text-align:center;min-width:100px;padding:0 16px;border-right:1px solid var(--border);flex-shrink:0}
+        .tick:last-child{border-right:none}
+        .tick-sym{font-size:10px;font-family:var(--mono);color:var(--muted);margin-bottom:4px}
+        .tick-val{font-size:14px;font-weight:700;font-family:var(--mono);color:var(--text);margin-bottom:2px}
         .tick-up{color:var(--accent2);font-size:10px;font-family:var(--mono)}
         .tick-down{color:#f87171;font-size:10px;font-family:var(--mono)}
       `}</style>

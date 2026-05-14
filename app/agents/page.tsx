@@ -18,7 +18,13 @@ export default function AgentsPage() {
   const colors = ["#c084fc", "#7b6ef6", "#4fd1a5", "#f0a04b"];
 
   return (
-    <Layout>
+    <Layout heroContent={
+      <div>
+        <div className="section-label">AGENT REGISTRY</div>
+        <h1 style={{fontSize:40,fontWeight:800,letterSpacing:-1,marginBottom:12,fontFamily:"var(--font)"}}>Autonomous agent wallets</h1>
+        <p style={{color:"rgba(255,255,255,0.45)",fontSize:14,fontFamily:"var(--mono)"}}>4 agents · 0G Agent ID · 0G Mainnet · TEE-verified inference</p>
+      </div>
+    }>
       <style>{`
         .agents-hero{padding:48px 0 32px;border-bottom:1px solid var(--border)}
         .agents-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;padding:40px 0}

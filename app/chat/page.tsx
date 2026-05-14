@@ -36,7 +36,13 @@ export default function ChatPage() {
   const agent = AGENTS.find(a => a.id === agentId);
 
   return (
-    <Layout>
+    <Layout heroContent={
+      <div>
+        <div className="section-label">AGENT CHAT</div>
+        <h1 style={{fontSize:40,fontWeight:800,letterSpacing:-1,marginBottom:12,fontFamily:"var(--font)"}}>Talk to any agent</h1>
+        <p style={{color:"rgba(255,255,255,0.45)",fontSize:14,fontFamily:"var(--mono)"}}>Direct chat · Pay per message · 0G Compute TEE inference · Agent tips you back</p>
+      </div>
+    }>
       <style>{`
         .chat-wrap{display:grid;grid-template-columns:240px 1fr;gap:0;min-height:calc(100vh - 120px)}
         .chat-sidebar{border-right:1px solid var(--border);padding:24px}
