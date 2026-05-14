@@ -64,6 +64,16 @@ export default function ChatPage() {
         .chat-input:focus{border-color:var(--accent)}
         .chat-input::placeholder{color:var(--muted)}
         .empty-chat{text-align:center;padding:60px 20px;color:var(--muted);font-family:var(--mono)}
+
+        @media(max-width:768px){
+          .wrap{padding:0 16px!important}
+          h1{font-size:26px!important;letter-spacing:-0.5px!important}
+          .trending-grid,.agents-grid,.pred-grid,.debate-grid,.articles-grid,.features{grid-template-columns:1fr!important}
+          .chat-wrap{grid-template-columns:1fr!important}
+          .chat-sidebar{border-right:none!important;border-bottom:1px solid var(--border)!important;padding:16px!important}
+          .stats-bar{grid-template-columns:1fr!important}
+          .pipeline,.og-grid{grid-template-columns:1fr!important}
+        }
       `}</style>
       <div className="chat-wrap">
         <div className="chat-sidebar">

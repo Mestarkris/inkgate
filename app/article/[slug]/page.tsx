@@ -55,6 +55,16 @@ export default function ArticlePage() {
         .pipeline-visual{display:flex;align-items:center;gap:8px;margin-bottom:32px;flex-wrap:wrap}
         .pipe-badge{font-size:11px;font-family:var(--mono);padding:6px 12px;border-radius:4px;border:1px solid var(--border)}
         .pipe-arrow{color:var(--muted);font-size:12px}
+
+        @media(max-width:768px){
+          .wrap{padding:0 16px!important}
+          h1{font-size:26px!important;letter-spacing:-0.5px!important}
+          .trending-grid,.agents-grid,.pred-grid,.debate-grid,.articles-grid,.features{grid-template-columns:1fr!important}
+          .chat-wrap{grid-template-columns:1fr!important}
+          .chat-sidebar{border-right:none!important;border-bottom:1px solid var(--border)!important;padding:16px!important}
+          .stats-bar{grid-template-columns:1fr!important}
+          .pipeline,.og-grid{grid-template-columns:1fr!important}
+        }
       `}</style>
 
       <div className="article-hero">

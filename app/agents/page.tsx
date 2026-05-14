@@ -51,6 +51,16 @@ export default function AgentsPage() {
         .step:last-child{border-bottom:none}
         .step-num{color:var(--accent);font-weight:700;font-family:var(--mono);min-width:20px}
         .step-text{font-size:13px;color:var(--muted);line-height:1.5}
+
+        @media(max-width:768px){
+          .wrap{padding:0 16px!important}
+          h1{font-size:26px!important;letter-spacing:-0.5px!important}
+          .trending-grid,.agents-grid,.pred-grid,.debate-grid,.articles-grid,.features{grid-template-columns:1fr!important}
+          .chat-wrap{grid-template-columns:1fr!important}
+          .chat-sidebar{border-right:none!important;border-bottom:1px solid var(--border)!important;padding:16px!important}
+          .stats-bar{grid-template-columns:1fr!important}
+          .pipeline,.og-grid{grid-template-columns:1fr!important}
+        }
       `}</style>
 
       <div className="agents-hero">

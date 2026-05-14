@@ -60,6 +60,16 @@ export default function DebatePage() {
         .tx-row{display:flex;justify-content:space-between}
         .tx-val{color:var(--accent2)}
         .hint{font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:8px}
+
+        @media(max-width:768px){
+          .wrap{padding:0 16px!important}
+          h1{font-size:26px!important;letter-spacing:-0.5px!important}
+          .trending-grid,.agents-grid,.pred-grid,.debate-grid,.articles-grid,.features{grid-template-columns:1fr!important}
+          .chat-wrap{grid-template-columns:1fr!important}
+          .chat-sidebar{border-right:none!important;border-bottom:1px solid var(--border)!important;padding:16px!important}
+          .stats-bar{grid-template-columns:1fr!important}
+          .pipeline,.og-grid{grid-template-columns:1fr!important}
+        }
       `}</style>
 
       <div className="debate-hero">

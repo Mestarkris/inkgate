@@ -64,6 +64,16 @@ export default function TrendingPage() {
         .tick-val{font-size:14px;font-weight:700;font-family:var(--mono);color:var(--text);margin-bottom:2px}
         .tick-up{color:var(--accent2);font-size:10px;font-family:var(--mono)}
         .tick-down{color:#f87171;font-size:10px;font-family:var(--mono)}
+
+        @media(max-width:768px){
+          .wrap{padding:0 16px!important}
+          h1{font-size:26px!important;letter-spacing:-0.5px!important}
+          .trending-grid,.agents-grid,.pred-grid,.debate-grid,.articles-grid,.features{grid-template-columns:1fr!important}
+          .chat-wrap{grid-template-columns:1fr!important}
+          .chat-sidebar{border-right:none!important;border-bottom:1px solid var(--border)!important;padding:16px!important}
+          .stats-bar{grid-template-columns:1fr!important}
+          .pipeline,.og-grid{grid-template-columns:1fr!important}
+        }
       `}</style>
       <div className="trending-hero">
         <div className="wrap">

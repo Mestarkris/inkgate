@@ -80,6 +80,24 @@ export default function Home() {
         .feat-desc{font-size:12px;color:var(--muted);line-height:1.5}
         footer{padding:32px 0;text-align:center;color:var(--muted);font-size:12px;font-family:var(--mono)}
         footer a{color:var(--accent);text-decoration:none}
+        @media(max-width:768px){
+          .hero{padding:48px 0 40px}
+          .hero h1{font-size:36px!important;letter-spacing:-1px!important}
+          .hero-sub{font-size:13px!important}
+          .hero-actions{flex-direction:column!important;gap:8px!important}
+          .btn-primary,.btn-secondary{width:100%!important;text-align:center!important;padding:12px 16px!important}
+          .stats-row{grid-template-columns:1fr!important}
+          .stat{padding:16px!important}
+          .stat-val{font-size:24px!important}
+          .section{padding:40px 0!important}
+          .section-title{font-size:22px!important}
+          .pipeline{grid-template-columns:1fr!important}
+          .pipe-step:not(:last-child)::after{content:none!important}
+          .og-grid{grid-template-columns:1fr!important}
+          .articles-grid{grid-template-columns:1fr!important}
+          .features{grid-template-columns:1fr!important}
+          .wrap{padding:0 16px!important}
+        }
       `}</style>
 
       {/* NAV */}

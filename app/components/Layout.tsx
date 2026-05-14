@@ -31,6 +31,18 @@ export default function Layout({ children, heroContent }: { children: React.Reac
         .section-title{font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:32px;font-family:var(--font)}
         .badge-dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);animation:pulse 2s infinite;display:inline-block;box-shadow:0 0 8px var(--accent2)}
         @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 8px var(--accent2)}50%{opacity:0.4;box-shadow:0 0 3px var(--accent2)}}
+        @media(max-width:768px){
+          .ig-nav-links{display:none!important}
+          .ig-nav-inner{gap:8px}
+          .ig-logo{font-size:17px}
+          .ig-page-hero{min-height:140px}
+          .ig-page-hero-content{padding:28px 0 20px}
+          .ig-page-hero h1{font-size:26px!important;letter-spacing:-0.5px!important;margin-bottom:8px!important}
+          .ig-page-hero p{font-size:12px!important}
+          .wrap{padding:0 16px!important}
+          .section-title{font-size:22px!important}
+          .ig-footer{padding:20px 0;font-size:11px}
+        }
       `}</style>
 
       {/* NAV */}
