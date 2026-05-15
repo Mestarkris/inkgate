@@ -38,7 +38,7 @@ export default function DebatePage() {
       }
 
       const tx = await signer.sendTransaction({
-        to: process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT_ADDRESS || "",
+        to: process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT_ADDRESS as string,
         value: parseEther("0.01"),
       });
       await tx.wait();
