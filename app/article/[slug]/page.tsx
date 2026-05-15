@@ -44,17 +44,15 @@ export default function ArticlePage() {
         const { BrowserProvider, parseEther } = await import("ethers");
         const provider = new BrowserProvider((window as any).ethereum);
         try {
-          await provider.send("wallet_switchEthereumChain", [{ chainId: "0x411D" }]);
-        } catch (switchErr: any) {
-          if (switchErr.code === 4902 || switchErr.code === -32603) {
-            await provider.send("wallet_addEthereumChain", [{
-              chainId: "0x411D", chainName: "0G Mainnet",
-              nativeCurrency: { name: "0G", symbol: "0G", decimals: 18 },
-              rpcUrls: ["https://evmrpc.0g.ai"],
-              blockExplorerUrls: ["https://chainscan.0g.ai"],
-            }]);
-          }
-        }
+          await provider.send("wallet_addEthereumChain", [{
+            chainId: "0x411D",
+            chainName: "0G Mainnet",
+            nativeCurrency: { name: "0G", symbol: "0G", decimals: 18 },
+            rpcUrls: ["https://evmrpc.0g.ai"],
+            blockExplorerUrls: ["https://chainscan.0g.ai"],
+          }]);
+        } catch (_) {}
+        await provider.send("wallet_switchEthereumChain", [{ chainId: "0x411D" }]).catch(() => {});
         const signer = await provider.getSigner();
         const recipient = process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT_ADDRESS || "0x1ba840fb6fC2a1a9cd9880803d920228DCF919E9";
         const tx = await signer.sendTransaction({ to: recipient, value: parseEther("0.01") });
