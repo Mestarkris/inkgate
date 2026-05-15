@@ -1,5 +1,5 @@
 import { getPrediction, storePrediction } from "@/lib/0g";
-import { sendA0GI } from "@/lib/agents/wallet";
+import { send0G } from "@/lib/agents/wallet";
 
 export async function POST(req: Request) {
   const { predictionId } = await req.json();

@@ -68,7 +68,7 @@ export default function CustomPage() {
         <div className="wrap">
           <input className="custom-input" placeholder="e.g. The future of decentralized AI on 0G Network..." value={topic} onChange={e => setTopic(e.target.value)} onKeyDown={e => e.key === "Enter" && generate()} />
           <button className="btn-primary" onClick={generate} disabled={loading || !topic.trim()}>
-            {loading ? "Agents writing..." : "Generate article · 0.01 A0GI"}
+            {loading ? "Agents writing..." : "Generate article · 0.01 0G"}
           </button>
 
           {result?.content && (

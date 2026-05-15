@@ -72,7 +72,7 @@ export default function ArticlePage() {
           <span className="article-tag">0G ECOSYSTEM</span>
           <div className="article-title">{article?.title || title}</div>
           <div className="article-meta">
-            <span className="meta-green">0.01 A0GI</span>
+            <span className="meta-green">0.01 0G</span>
             <span>3 autonomous agents</span>
             <span>TEE verified · 0G Compute</span>
             <span>Stored on 0G Storage</span>
@@ -97,7 +97,7 @@ export default function ArticlePage() {
                 <span className="pipe-badge" style={{background:"#2e1f0f",color:"var(--warn)",borderColor:"rgba(240,160,75,0.2)"}}>Writer</span>
               </div>
               <button className="btn-primary" onClick={unlock} disabled={loading} style={{fontSize:15,padding:"14px 32px"}}>
-                {loading ? "Agents writing..." : "Unlock with 0.01 A0GI →"}
+                {loading ? "Agents writing..." : "Unlock with 0.01 0G →"}
               </button>
             </div>
           ) : (

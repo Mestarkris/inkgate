@@ -2,7 +2,7 @@ import { getArticle } from "@/lib/articles";
 import { researchAgent } from "@/lib/agents/research";
 import { factCheckAgent } from "@/lib/agents/factcheck";
 import { writerAgent } from "@/lib/agents/writer";
-import { sendA0GI } from "@/lib/agents/wallet";
+import { send0G } from "@/lib/agents/wallet";
 import { storeArticle } from "@/lib/0g";
 
 async function verifyPayment(txHash: string): Promise<boolean> {
@@ -35,7 +35,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
       paymentInfo: {
         network: "0G Mainnet",
         chainId: 16661,
-        amount: "0.01 A0GI",
+        amount: "0.01 0G",
         payTo: process.env.PAYMENT_RECIPIENT_ADDRESS,
         description: "InkGate multi-agent article unlock",
         explorer: "https://chainscan.0g.ai",
@@ -48,12 +48,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
 
   try {
     console.log("Orchestrator: received payment", paymentHeader);
-    console.log("Orchestrator: splitting A0GI to 3 agents...");
+    console.log("Orchestrator: splitting 0G to 3 agents...");
 
     const [agent1Tx, agent2Tx, agent3Tx] = await Promise.all([
-      sendA0GI(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT1_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0"),
-      sendA0GI(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT2_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0"),
-      sendA0GI(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT3_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0"),
+      send0G(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT1_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0"),
+      send0G(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT2_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0"),
+      send0G(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT3_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0"),
     ]);
 
     const { research, txHash: researchTx } = await researchAgent(article.title);

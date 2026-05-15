@@ -3,7 +3,7 @@ export const articles = [
   { slug: "0g-compute-tee-inference",     title: "0G Compute: How TEE-verified AI inference works" },
   { slug: "0g-agent-id-protocol",         title: "0G Agent ID: Tokenizing autonomous AI agents" },
   { slug: "0g-vs-filecoin-arweave",       title: "0G Storage vs Filecoin vs Arweave: The 2026 comparison" },
-  { slug: "a0gi-token-outlook-2026",      title: "A0GI token: What investors need to know in 2026" },
+  { slug: "0g-token-outlook-2026",      title: "0G token: What investors need to know in 2026" },
   { slug: "ai-agents-onchain-2026",       title: "Onchain AI agents: How 0G is leading the charge" },
   { slug: "decentralized-ai-2026",        title: "Decentralized AI in 2026: Why 0G matters" },
   { slug: "0g-ecosystem-projects",        title: "Top projects building on 0G in 2026" },

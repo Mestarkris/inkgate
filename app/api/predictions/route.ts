@@ -2,7 +2,7 @@ import { listPredictions, storePrediction } from "@/lib/0g";
 import { ogInference } from "@/lib/0g-compute";
 
 const TOPICS = [
-  "0G Network (A0GI)",
+  "0G Network",
   "Bitcoin (BTC)",
   "Ethereum (ETH)",
   "Solana (SOL)",
@@ -22,7 +22,7 @@ export async function POST() {
     "You are the InkGate Predictor Agent on 0G Compute Network. You specialize in 0G ecosystem and crypto predictions. Make precise, confident 24-hour predictions.",
     `Make a 24-hour prediction for: ${topic}
 
-Context: 0G is a decentralized AI operating system with Storage, Compute, and Agent ID layers. Native token is A0GI on chain ID 16661.
+Context: 0G is a decentralized AI operating system with Storage, Compute, and Agent ID layers. Native token is 0G on chain ID 16661.
 
 Say UP or DOWN with a brief reason referencing 0G ecosystem where relevant. Max 2 sentences.`,
     120

@@ -122,14 +122,14 @@ export default function Home() {
         <div className="wrap">
           <div className="hero-badge"><span className="badge-dot"></span>Live on 0G Mainnet</div>
           <h1>AI research,<br /><em>pay to unlock.</em></h1>
-          <p className="hero-sub">4 autonomous agents research, fact-check and write every article. Each agent earns A0GI onchain. Powered by 0G Compute, Storage, and Agent ID.</p>
+          <p className="hero-sub">4 autonomous agents research, fact-check and write every article. Each agent earns 0G onchain. Powered by 0G Compute, Storage, and Agent ID.</p>
           <div className="hero-actions">
             <Link href="/trending"><button className="btn-primary">Browse articles</button></Link>
             <Link href="/custom"><button className="btn-secondary">Write anything</button></Link>
             <Link href="/agents"><button className="btn-secondary">View agents</button></Link>
           </div>
           <div className="stats-row">
-            <div className="stat"><div className="stat-val"><span>0.01</span> A0GI</div><div className="stat-label">per article unlock</div></div>
+            <div className="stat"><div className="stat-val"><span>0.01</span> 0G</div><div className="stat-label">per article unlock</div></div>
             <div className="stat"><div className="stat-val"><span>{stats.articlesGenerated || 0}</span></div><div className="stat-label">articles generated</div></div>
             <div className="stat"><div className="stat-val"><span>3</span> layers</div><div className="stat-label">Storage · Compute · Agent ID</div></div>
           </div>
@@ -142,10 +142,10 @@ export default function Home() {
           <div className="section-label">AGENT PIPELINE</div>
           <div className="section-title">How articles get made</div>
           <div className="pipeline">
-            <div className="pipe-step"><div className="pipe-num">01</div><div className="pipe-name">Orchestrator</div><div className="pipe-role">Receives A0GI payment, splits to all 3 agents via 0G chain</div><span className="pipe-earn earn-4">0.01 A0GI</span></div>
-            <div className="pipe-step"><div className="pipe-num">02</div><div className="pipe-name">Research Agent</div><div className="pipe-role">Fetches live crypto data via 0G Compute (TEE-verified)</div><span className="pipe-earn earn-1">0.004 A0GI</span></div>
-            <div className="pipe-step"><div className="pipe-num">03</div><div className="pipe-name">Fact Check Agent</div><div className="pipe-role">Verifies all claims via TEE inference on 0G Compute</div><span className="pipe-earn earn-2">0.003 A0GI</span></div>
-            <div className="pipe-step"><div className="pipe-num">04</div><div className="pipe-name">Writer Agent</div><div className="pipe-role">Writes final article, stores permanently on 0G Storage</div><span className="pipe-earn earn-3">0.003 A0GI</span></div>
+            <div className="pipe-step"><div className="pipe-num">01</div><div className="pipe-name">Orchestrator</div><div className="pipe-role">Receives 0G payment, splits to all 3 agents via 0G chain</div><span className="pipe-earn earn-4">0.01 0G</span></div>
+            <div className="pipe-step"><div className="pipe-num">02</div><div className="pipe-name">Research Agent</div><div className="pipe-role">Fetches live crypto data via 0G Compute (TEE-verified)</div><span className="pipe-earn earn-1">0.004 0G</span></div>
+            <div className="pipe-step"><div className="pipe-num">03</div><div className="pipe-name">Fact Check Agent</div><div className="pipe-role">Verifies all claims via TEE inference on 0G Compute</div><span className="pipe-earn earn-2">0.003 0G</span></div>
+            <div className="pipe-step"><div className="pipe-num">04</div><div className="pipe-name">Writer Agent</div><div className="pipe-role">Writes final article, stores permanently on 0G Storage</div><span className="pipe-earn earn-3">0.003 0G</span></div>
           </div>
         </div>
       </section>
@@ -159,7 +159,7 @@ export default function Home() {
             <div className="og-card"><div className="og-icon" style={{background:"#1a1a3e",color:"#7b6ef6"}}>◈</div><div className="og-title">0G Storage</div><div className="og-desc">Every article stored permanently on 0G's decentralized storage. Agent state, predictions, and stats all persist on 0G KV layer.</div><span className="og-tag">indexer-storage-turbo.0g.ai</span></div>
             <div className="og-card"><div className="og-icon" style={{background:"#0f2e22",color:"#4fd1a5"}}>⬡</div><div className="og-title">0G Compute Network</div><div className="og-desc">All 4 agents run inference via 0G Compute using qwen/qwen-2.5-7b-instruct. Every inference is TEE/TeeML verified — cryptographically proven output.</div><span className="og-tag">TEE/TeeML verified · Provider 0xa48f...</span></div>
             <div className="og-card"><div className="og-icon" style={{background:"#2e1a3e",color:"#c084fc"}}>◎</div><div className="og-title">0G Agent ID</div><div className="og-desc">All 4 agents have tokenized identities stored on 0G Storage via the Agent ID protocol. Each agent has capabilities, price, and verifiable history.</div><span className="og-tag">InkGate-AgentID-v1</span></div>
-            <div className="og-card"><div className="og-icon" style={{background:"#2e1f0f",color:"#f0a04b"}}>⬢</div><div className="og-title">0G Mainnet</div><div className="og-desc">All payments in native A0GI token. Agent wallets on 0G chain ID 16661. Every transaction verifiable on 0G Explorer.</div><span className="og-tag">chainscan.0g.ai · Chain 16661</span></div>
+            <div className="og-card"><div className="og-icon" style={{background:"#2e1f0f",color:"#f0a04b"}}>⬢</div><div className="og-title">0G Mainnet</div><div className="og-desc">All payments in native 0G token. Agent wallets on 0G chain ID 16661. Every transaction verifiable on 0G Explorer.</div><span className="og-tag">chainscan.0g.ai · Chain 16661</span></div>
           </div>
         </div>
       </section>
@@ -174,7 +174,7 @@ export default function Home() {
               { slug: "0g-storage-deep-dive", num: "#01", title: "0G Storage: The decentralized AI backbone explained" },
               { slug: "0g-compute-tee-inference", num: "#02", title: "0G Compute: How TEE-verified AI inference works" },
               { slug: "0g-agent-id-protocol", num: "#03", title: "0G Agent ID: Tokenizing autonomous AI agents" },
-              { slug: "a0gi-token-outlook-2026", num: "#04", title: "A0GI token: What investors need to know in 2026" },
+              { slug: "0g-token-outlook-2026", num: "#04", title: "0G token: What investors need to know in 2026" },
               { slug: "decentralized-ai-2026", num: "#05", title: "Decentralized AI in 2026: Why 0G matters" },
               { slug: "agentic-economy-2026", num: "#06", title: "The agentic economy: AI agents that earn and spend" },
               { slug: "0g-vs-filecoin-arweave", num: "#07", title: "0G Storage vs Filecoin vs Arweave: The 2026 comparison" },
@@ -184,7 +184,7 @@ export default function Home() {
               <Link key={a.slug} href={`/article/${a.slug}`} className="article-card">
                 <div className="article-num">{a.num}</div>
                 <div className="article-title">{a.title}</div>
-                <div className="article-price">0.01 A0GI · 3 agents</div>
+                <div className="article-price">0.01 0G · 3 agents</div>
               </Link>
             ))}
           </div>
@@ -198,11 +198,11 @@ export default function Home() {
           <div className="section-title">Everything InkGate offers</div>
           <div className="features">
             {[
-              { href: "/trending", icon: "📝", title: "Pay-per-article", desc: "Unlock any article with 0.01 A0GI. 3 agents write it live, stored on 0G Storage permanently." },
+              { href: "/trending", icon: "📝", title: "Pay-per-article", desc: "Unlock any article with 0.01 0G. 3 agents write it live, stored on 0G Storage permanently." },
               { href: "/custom", icon: "✍️", title: "Custom articles", desc: "Submit any topic. Agents research it live on 0G Compute and write a fresh article just for you." },
-              { href: "/chat", icon: "💬", title: "Agent chat", desc: "Talk directly to any InkGate agent. Pay per message. Agent tips you back in A0GI." },
-              { href: "/debate", icon: "⚔️", title: "AI debates", desc: "Bull vs Bear vs Judge. 3 agents debate any topic. 4 onchain A0GI payments." },
-              { href: "/predictions", icon: "📊", title: "Predictions", desc: "AI predicts 0G, BTC, ETH prices. Bet A0GI on YES or NO. Winners paid automatically onchain." },
+              { href: "/chat", icon: "💬", title: "Agent chat", desc: "Talk directly to any InkGate agent. Pay per message. Agent tips you back in 0G." },
+              { href: "/debate", icon: "⚔️", title: "AI debates", desc: "Bull vs Bear vs Judge. 3 agents debate any topic. 4 onchain 0G payments." },
+              { href: "/predictions", icon: "📊", title: "Predictions", desc: "AI predicts 0G, BTC, ETH prices. Bet 0G on YES or NO. Winners paid automatically onchain." },
               { href: "/agents", icon: "🤖", title: "Agent registry", desc: "All 4 agents exposed as callable services via /api/registry. Agent-as-a-Service on 0G." },
             ].map((f, i) => (
               <Link key={i} href={f.href} className="feat">

@@ -4,7 +4,7 @@ import { privateKeyToAccount } from "viem/accounts";
 export const ogChain = defineChain({
   id: 16661,
   name: "0G Mainnet",
-  nativeCurrency: { name: "A0GI", symbol: "A0GI", decimals: 18 },
+  nativeCurrency: { name: "0G", symbol: "0G", decimals: 18 },
   rpcUrls: { default: { http: ["https://evmrpc.0g.ai"] } },
   blockExplorers: {
     default: { name: "0G Explorer", url: "https://chainscan.0g.ai" },
@@ -21,7 +21,7 @@ export function createAgentWallet(privateKey: string) {
   return { client, account };
 }
 
-export async function sendA0GI(
+export async function send0G(
   privateKey: string,
   to: `0x${string}`,
   amount: number
@@ -33,7 +33,7 @@ export async function sendA0GI(
     value: parseEther(amount.toFixed(18)),
     chain: ogChain,
   });
-  console.log(`[0G] Sent ${amount} A0GI to ${to} — tx: ${hash}`);
+  console.log(`[0G] Sent ${amount} 0G to ${to} — tx: ${hash}`);
   return hash;
 }
 

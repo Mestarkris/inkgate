@@ -1,5 +1,5 @@
 import { ogInference } from "@/lib/0g-compute";
-import { sendA0GI } from "./wallet";
+import { send0G } from "./wallet";
 
 export async function bullAgent(topic: string): Promise<{ argument: string; txHash: string }> {
   const { content: argument } = await ogInference(
@@ -7,7 +7,7 @@ export async function bullAgent(topic: string): Promise<{ argument: string; txHa
     "Make a compelling bullish argument for: " + topic + ". Max 150 words.",
     300
   );
-  const txHash = await sendA0GI(
+  const txHash = await send0G(
     process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!,
     process.env.AGENT1_ADDRESS as `0x${string}`,
     0.002
@@ -21,7 +21,7 @@ export async function bearAgent(topic: string): Promise<{ argument: string; txHa
     "Make a compelling bearish argument for: " + topic + ". Max 150 words.",
     300
   );
-  const txHash = await sendA0GI(
+  const txHash = await send0G(
     process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!,
     process.env.AGENT2_ADDRESS as `0x${string}`,
     0.002
@@ -35,7 +35,7 @@ export async function judgeAgent(topic: string, bullArg: string, bearArg: string
     "Topic: " + topic + "\n\nBull case:\n" + bullArg + "\n\nBear case:\n" + bearArg + "\n\nGive a balanced verdict in 100 words. Declare a winner.",
     200
   );
-  const txHash = await sendA0GI(
+  const txHash = await send0G(
     process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!,
     process.env.AGENT3_ADDRESS as `0x${string}`,
     0.002

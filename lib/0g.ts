@@ -112,10 +112,10 @@ export async function getAgentIdentity(id: string): Promise<AgentIdentity | null
 
 export async function bootstrapAgentIdentities(): Promise<void> {
   const agents: AgentIdentity[] = [
-    { id: "orchestrator", name: "InkGate Orchestrator", role: "Routes payments and orchestrates the full agent pipeline", address: process.env.PAYMENT_RECIPIENT_ADDRESS ?? "", capabilities: ["payment-routing", "pipeline-orchestration", "nft-minting", "0g-storage"], pricePerCall: "0.01 A0GI", createdAt: new Date().toISOString() },
-    { id: "research", name: "InkGate Research Agent", role: "Fetches live market data and crypto news", address: process.env.AGENT1_ADDRESS ?? "", capabilities: ["market-data", "news-fetch", "research", "0g-memory"], pricePerCall: "0.004 A0GI", createdAt: new Date().toISOString() },
-    { id: "factcheck", name: "InkGate Fact Check Agent", role: "Verifies research accuracy", address: process.env.AGENT2_ADDRESS ?? "", capabilities: ["fact-checking", "verification", "0g-memory"], pricePerCall: "0.003 A0GI", createdAt: new Date().toISOString() },
-    { id: "writer", name: "InkGate Writer Agent", role: "Produces final articles", address: process.env.AGENT3_ADDRESS ?? "", capabilities: ["content-writing", "article-generation", "0g-storage"], pricePerCall: "0.003 A0GI", createdAt: new Date().toISOString() },
+    { id: "orchestrator", name: "InkGate Orchestrator", role: "Routes payments and orchestrates the full agent pipeline", address: process.env.PAYMENT_RECIPIENT_ADDRESS ?? "", capabilities: ["payment-routing", "pipeline-orchestration", "nft-minting", "0g-storage"], pricePerCall: "0.01 0G", createdAt: new Date().toISOString() },
+    { id: "research", name: "InkGate Research Agent", role: "Fetches live market data and crypto news", address: process.env.AGENT1_ADDRESS ?? "", capabilities: ["market-data", "news-fetch", "research", "0g-memory"], pricePerCall: "0.004 0G", createdAt: new Date().toISOString() },
+    { id: "factcheck", name: "InkGate Fact Check Agent", role: "Verifies research accuracy", address: process.env.AGENT2_ADDRESS ?? "", capabilities: ["fact-checking", "verification", "0g-memory"], pricePerCall: "0.003 0G", createdAt: new Date().toISOString() },
+    { id: "writer", name: "InkGate Writer Agent", role: "Produces final articles", address: process.env.AGENT3_ADDRESS ?? "", capabilities: ["content-writing", "article-generation", "0g-storage"], pricePerCall: "0.003 0G", createdAt: new Date().toISOString() },
   ];
   console.log("[0G] Bootstrapping agent identities...");
   await Promise.allSettled(agents.map((a) => registerAgentIdentity(a)));

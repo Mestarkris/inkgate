@@ -1,5 +1,5 @@
 import { ogInference } from "@/lib/0g-compute";
-import { sendA0GI } from "./wallet";
+import { send0G } from "./wallet";
 
 export async function factCheckAgent(topic: string, research: string): Promise<{ verifiedResearch: string; txHash: string }> {
   const { content: verifiedResearch } = await ogInference(
@@ -8,7 +8,7 @@ export async function factCheckAgent(topic: string, research: string): Promise<{
     400
   );
 
-  const txHash = await sendA0GI(
+  const txHash = await send0G(
     process.env.AGENT2_PRIVATE_KEY!,
     process.env.AGENT3_ADDRESS as `0x${string}`,
     0.001

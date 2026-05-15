@@ -75,15 +75,15 @@ export default function AgentsPage() {
         <div className="stats-bar">
           <div className="sbar-item"><div className="sbar-val">{stats.articlesGenerated || 0}</div><div className="sbar-label">Articles generated</div></div>
           <div className="sbar-item"><div className="sbar-val">4</div><div className="sbar-label">Active agents</div></div>
-          <div className="sbar-item"><div className="sbar-val">{Number(stats.totalPaid || 0).toFixed(3)}</div><div className="sbar-label">A0GI total paid</div></div>
+          <div className="sbar-item"><div className="sbar-val">{Number(stats.totalPaid || 0).toFixed(3)}</div><div className="sbar-label">0G total paid</div></div>
         </div>
 
         <div className="agents-grid">
           {(agents.length > 0 ? agents : [
-            {id:"orchestrator",name:"InkGate Orchestrator",role:"Routes payments and orchestrates the full agent pipeline",capabilities:["payment-routing","0g-storage","agent-id"],pricePerCall:"0.01 A0GI",address:""},
-            {id:"research",name:"InkGate Research Agent",role:"Fetches live crypto data via 0G Compute (TEE-verified)",capabilities:["market-data","0g-compute","tee-inference"],pricePerCall:"0.004 A0GI",address:""},
-            {id:"factcheck",name:"InkGate Fact Check Agent",role:"Verifies research accuracy via TeeML verified inference",capabilities:["fact-checking","tee-inference","0g-memory"],pricePerCall:"0.003 A0GI",address:""},
-            {id:"writer",name:"InkGate Writer Agent",role:"Writes final articles, stores permanently on 0G Storage",capabilities:["content-writing","0g-storage","article-generation"],pricePerCall:"0.003 A0GI",address:""},
+            {id:"orchestrator",name:"InkGate Orchestrator",role:"Routes payments and orchestrates the full agent pipeline",capabilities:["payment-routing","0g-storage","agent-id"],pricePerCall:"0.01 0G",address:""},
+            {id:"research",name:"InkGate Research Agent",role:"Fetches live crypto data via 0G Compute (TEE-verified)",capabilities:["market-data","0g-compute","tee-inference"],pricePerCall:"0.004 0G",address:""},
+            {id:"factcheck",name:"InkGate Fact Check Agent",role:"Verifies research accuracy via TeeML verified inference",capabilities:["fact-checking","tee-inference","0g-memory"],pricePerCall:"0.003 0G",address:""},
+            {id:"writer",name:"InkGate Writer Agent",role:"Writes final articles, stores permanently on 0G Storage",capabilities:["content-writing","0g-storage","article-generation"],pricePerCall:"0.003 0G",address:""},
           ]).map((agent:any, i:number) => {
             const wallet = wallets.find((w:any) => w.id === agent.id);
             return (
@@ -99,8 +99,8 @@ export default function AgentsPage() {
                   </div>
                 </div>
                 <div className="agent-balance">
-                  <div className="agent-bal-label">A0GI Balance</div>
-                  <div className="agent-bal-val" style={{color:colors[i]}}>{wallet?.balances?.a0gi ?? "..."} A0GI</div>
+                  <div className="agent-bal-label">0G Balance</div>
+                  <div className="agent-bal-val" style={{color:colors[i]}}>{wallet?.balances?.zeroG ?? "..."} 0G</div>
                 </div>
                 <div className="agent-caps">
                   {(agent.capabilities || []).map((c:string,j:number) => <span key={j} className="cap">{c}</span>)}
@@ -115,8 +115,8 @@ export default function AgentsPage() {
         <div className="how-it-works">
           <div className="section-label" style={{marginBottom:16}}>HOW IT WORKS</div>
           {[
-            "User pays 0.01 A0GI to the Orchestrator wallet on 0G",
-            "Orchestrator splits A0GI to Research, FactCheck, and Writer agents",
+            "User pays 0.01 0G to the Orchestrator wallet on 0G",
+            "Orchestrator splits 0G to Research, FactCheck, and Writer agents",
             "Each agent calls 0G Compute for TEE-verified inference",
             "Final article stored permanently on 0G Storage",
             "Agent identities verifiable via 0G Agent ID protocol",

@@ -1,12 +1,12 @@
 /**
  * lib/swap.ts — 0G ecosystem token info
- * Native token: A0GI (0G Mainnet)
+ * Native token: 0G (0G Mainnet)
  */
 
 export const OG_CHAIN_ID = "16661";
 
 export const OG_TOKENS: Record<string, { symbol: string; decimals: number; description: string }> = {
-  A0GI: { symbol: "A0GI", decimals: 18, description: "0G native token" },
+  ZeroG: { symbol: "0G", decimals: 18, description: "0G mainnet token" },
   ETH: { symbol: "ETH", decimals: 18, description: "Ethereum" },
   USDT: { symbol: "USDT", decimals: 6, description: "Tether USD" },
 };

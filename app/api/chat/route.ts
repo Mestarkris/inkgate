@@ -1,4 +1,4 @@
-import { sendA0GI } from "@/lib/agents/wallet";
+import { send0G } from "@/lib/agents/wallet";
 import { ogInference } from "@/lib/0g-compute";
 import { getLivePrice } from "@/lib/prices";
 
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   if (!txHash) {
     return Response.json({
       error: "Payment required",
-      paymentInfo: { network: "0G Mainnet", chainId: 16661, amount: "0.01 A0GI", payTo: process.env.PAYMENT_RECIPIENT_ADDRESS },
+      paymentInfo: { network: "0G Mainnet", chainId: 16661, amount: "0.01 0G", payTo: process.env.PAYMENT_RECIPIENT_ADDRESS },
     }, { status: 402 });
   }
 
@@ -48,11 +48,11 @@ export async function POST(req: Request) {
 
   let agentTx = "0x0";
   if (userAddress && agentKeys[agentId]) {
-    agentTx = await sendA0GI(agentKeys[agentId], userAddress as `0x${string}`, 0.001).catch(() => "0x0");
+    agentTx = await send0G(agentKeys[agentId], userAddress as `0x${string}`, 0.001).catch(() => "0x0");
   }
 
   const senderKey = agentKeys[agentId] || process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!;
-  await sendA0GI(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, 
+  await send0G(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, 
     (agentId === "research" ? process.env.AGENT1_ADDRESS : agentId === "factcheck" ? process.env.AGENT2_ADDRESS : process.env.AGENT3_ADDRESS) as `0x${string}`,
     0.003
   ).catch(() => {});

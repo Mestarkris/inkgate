@@ -36,7 +36,7 @@ export default function DebatePage() {
       <div>
         <div className="section-label">AI DEBATES</div>
         <h1 style={{fontSize:40,fontWeight:800,letterSpacing:-1,marginBottom:12,fontFamily:"var(--font)"}}>Bull vs Bear vs Judge</h1>
-        <p style={{color:"rgba(255,255,255,0.45)",fontSize:14,fontFamily:"var(--mono)"}}>Type any topic · 3 agents debate · 0G Compute TEE inference · A0GI payments</p>
+        <p style={{color:"rgba(255,255,255,0.45)",fontSize:14,fontFamily:"var(--mono)"}}>Type any topic · 3 agents debate · 0G Compute TEE inference · 0G payments</p>
       </div>
     }>
       <style>{`
@@ -96,7 +96,7 @@ export default function DebatePage() {
             ))}
           </div>
           <button className="btn-primary" onClick={runDebate} disabled={loading || !topic.trim()} style={{marginBottom:32}}>
-            {loading ? "Agents debating on 0G Compute..." : "Start debate · 0.01 A0GI"}
+            {loading ? "Agents debating on 0G Compute..." : "Start debate · 0.01 0G"}
           </button>
 
           {result && (

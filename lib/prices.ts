@@ -103,10 +103,10 @@ export const SYMBOL_MAP: Record<string, string> = Object.fromEntries(
 );
 
 /**
- * Fetch A0GI (0G native token) price
+ * Fetch 0G native token price
  * Uses CoinGecko - will show price once listed
  */
-export async function getA0GIPrice(): Promise<{ price: number | null; message: string }> {
+export async function get0GPrice(): Promise<{ price: number | null; message: string }> {
   try {
     const res = await fetch(
       "https://api.coingecko.com/api/v3/simple/price?ids=zero-gravity&vs_currencies=usd&include_24hr_change=true",
@@ -117,11 +117,11 @@ export async function getA0GIPrice(): Promise<{ price: number | null; message: s
     if (data?.usd) {
       return {
         price: data.usd,
-        message: `A0GI (0G Token) = $${formatPrice(data.usd)} | 24h: ${(data.usd_24h_change ?? 0).toFixed(2)}%`,
+        message: `0G Token = $${formatPrice(data.usd)} | 24h: ${(data.usd_24h_change ?? 0).toFixed(2)}%`,
       };
     }
-    return { price: null, message: "A0GI price: not yet listed on CoinGecko" };
+    return { price: null, message: "0G price: not yet listed on CoinGecko" };
   } catch {
-    return { price: null, message: "A0GI price: unavailable" };
+    return { price: null, message: "0G price: unavailable" };
   }
 }

@@ -11,7 +11,7 @@ export default function TrendingPage() {
 
   useEffect(() => {
     setTrending([
-      { symbol: "A0GI", name: "0G Network", price: "—", change24h: "0", isA0GI: true },
+      { symbol: "0G", name: "0G Network", price: "—", change24h: "0", is0G: true },
       { symbol: "BTC", price: "83000", change24h: "1.2" },
       { symbol: "ETH", price: "2258", change24h: "-1.91" },
       { symbol: "BNB", price: "672", change24h: "-0.74" },
@@ -20,8 +20,8 @@ export default function TrendingPage() {
     ]);
     fetch("/api/trending").then(r => r.json()).then(d => {
       const coins = (d.trending || []).filter((t:any) => t.symbol !== "XRP" && t.symbol !== "USDC");
-      const a0gi = { symbol: "A0GI", name: "0G Network", price: "—", change24h: "0", isA0GI: true };
-      setTrending([a0gi, ...coins.slice(0, 6)]);
+      const zeroG = { symbol: "0G", name: "0G Network", price: "—", change24h: "0", is0G: true };
+      setTrending([zeroG, ...coins.slice(0, 6)]);
     }).catch(() => {});
   }, []);
 
@@ -29,7 +29,7 @@ export default function TrendingPage() {
     { slug: "0g-storage-deep-dive", num: "01", title: "0G Storage: The decentralized AI backbone explained", tag: "0G STORAGE" },
     { slug: "0g-compute-tee-inference", num: "02", title: "0G Compute: How TEE-verified AI inference works", tag: "0G COMPUTE" },
     { slug: "0g-agent-id-protocol", num: "03", title: "0G Agent ID: Tokenizing autonomous AI agents", tag: "AGENT ID" },
-    { slug: "a0gi-token-outlook-2026", num: "04", title: "A0GI token: What investors need to know in 2026", tag: "A0GI" },
+    { slug: "0g-token-outlook-2026", num: "04", title: "0G token: What investors need to know in 2026", tag: "0G" },
     { slug: "decentralized-ai-2026", num: "05", title: "Decentralized AI in 2026: Why 0G matters", tag: "AI" },
     { slug: "agentic-economy-2026", num: "06", title: "The agentic economy: AI agents that earn and spend", tag: "ECONOMY" },
     { slug: "0g-vs-filecoin-arweave", num: "07", title: "0G Storage vs Filecoin vs Arweave: The 2026 comparison", tag: "STORAGE" },
@@ -45,7 +45,7 @@ export default function TrendingPage() {
       <div>
         <div className="section-label">ARTICLES</div>
         <h1 style={{fontSize:40,fontWeight:800,letterSpacing:-1,marginBottom:12,fontFamily:"var(--font)"}}>0G ecosystem research</h1>
-        <p style={{color:"rgba(255,255,255,0.45)",fontSize:14,fontFamily:"var(--mono)"}}>Written live by 3 agents · Stored forever on 0G Storage · 0.01 A0GI to unlock</p>
+        <p style={{color:"rgba(255,255,255,0.45)",fontSize:14,fontFamily:"var(--mono)"}}>Written live by 3 agents · Stored forever on 0G Storage · 0.01 0G to unlock</p>
       </div>
     }>
       <style>{`
@@ -79,14 +79,14 @@ export default function TrendingPage() {
         <div className="wrap">
           <div className="section-label">ARTICLES</div>
           <h1 style={{fontSize:40,fontWeight:800,letterSpacing:-1,marginBottom:12,fontFamily:"var(--font)"}}>0G ecosystem research</h1>
-          <p style={{color:"var(--muted)",fontSize:15,fontFamily:"var(--mono)",marginBottom:32}}>Written live by 3 agents · Stored forever on 0G Storage · 0.01 A0GI to unlock</p>
+          <p style={{color:"var(--muted)",fontSize:15,fontFamily:"var(--mono)",marginBottom:32}}>Written live by 3 agents · Stored forever on 0G Storage · 0.01 0G to unlock</p>
           {trending.length > 0 && (
             <div className="ticker">
               {trending.slice(0,7).map((t:any,i:number) => (
                 <div key={i} className="tick">
-                  <div className="tick-sym" style={t.isA0GI ? {color:"var(--accent)"} : {}}>{t.symbol}</div>
-                  <div className="tick-val" style={t.isA0GI ? {color:"var(--accent)"} : {}}>{t.isA0GI ? "A0GI" : "$"+Number(t.price).toLocaleString()}</div>
-                  <div className={t.isA0GI ? "tick-up" : Number(t.change24h) >= 0 ? "tick-up" : "tick-down"}>{t.isA0GI ? "● LIVE" : (Number(t.change24h) >= 0 ? "▲" : "▼")+" "+Math.abs(Number(t.change24h))+"%"}</div>
+                  <div className="tick-sym" style={t.is0G ? {color:"var(--accent)"} : {}}>{t.symbol}</div>
+                  <div className="tick-val" style={t.is0G ? {color:"var(--accent)"} : {}}>{t.is0G ? "0G" : "$"+Number(t.price).toLocaleString()}</div>
+                  <div className={t.is0G ? "tick-up" : Number(t.change24h) >= 0 ? "tick-up" : "tick-down"}>{t.is0G ? "● LIVE" : (Number(t.change24h) >= 0 ? "▲" : "▼")+" "+Math.abs(Number(t.change24h))+"%"}</div>
                 </div>
               ))}
             </div>
@@ -100,7 +100,7 @@ export default function TrendingPage() {
               <div className="a-num">#{a.num}</div>
               <div className="a-tag">{a.tag}</div>
               <div className="a-title">{a.title}</div>
-              <div className="a-price">0.01 A0GI · 3 agents · TEE verified</div>
+              <div className="a-price">0.01 0G · 3 agents · TEE verified</div>
             </Link>
           ))}
         </div>

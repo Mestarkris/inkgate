@@ -1,5 +1,5 @@
 import { bullAgent, bearAgent, judgeAgent } from "@/lib/agents/debate";
-import { sendA0GI } from "@/lib/agents/wallet";
+import { send0G } from "@/lib/agents/wallet";
 
 async function verifyPayment(txHash: string): Promise<boolean> {
   try {
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   if (!txHash) {
     return Response.json({
       error: "Payment required",
-      paymentInfo: { network: "0G Mainnet", chainId: 16661, amount: "0.01 A0GI", payTo: process.env.PAYMENT_RECIPIENT_ADDRESS },
+      paymentInfo: { network: "0G Mainnet", chainId: 16661, amount: "0.01 0G", payTo: process.env.PAYMENT_RECIPIENT_ADDRESS },
     }, { status: 402 });
   }
 
@@ -28,8 +28,8 @@ export async function POST(req: Request) {
   if (!isValid) return Response.json({ error: "Payment not confirmed on 0G Mainnet" }, { status: 402 });
 
   const [bullTx, bearTx] = await Promise.all([
-    sendA0GI(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT1_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0"),
-    sendA0GI(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT2_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0"),
+    send0G(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT1_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0"),
+    send0G(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT2_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0"),
   ]);
 
   const [{ argument: bullArg }, { argument: bearArg }] = await Promise.all([
@@ -37,8 +37,8 @@ export async function POST(req: Request) {
     bearAgent(topic),
   ]);
 
-  const bullToJudgeTx = await sendA0GI(process.env.AGENT1_PRIVATE_KEY!, process.env.AGENT3_ADDRESS as `0x${string}`, 0.001).catch(() => "0x0");
-  const bearToJudgeTx = await sendA0GI(process.env.AGENT2_PRIVATE_KEY!, process.env.AGENT3_ADDRESS as `0x${string}`, 0.001).catch(() => "0x0");
+  const bullToJudgeTx = await send0G(process.env.AGENT1_PRIVATE_KEY!, process.env.AGENT3_ADDRESS as `0x${string}`, 0.001).catch(() => "0x0");
+  const bearToJudgeTx = await send0G(process.env.AGENT2_PRIVATE_KEY!, process.env.AGENT3_ADDRESS as `0x${string}`, 0.001).catch(() => "0x0");
 
   const { verdict } = await judgeAgent(topic, bullArg, bearArg);
 
