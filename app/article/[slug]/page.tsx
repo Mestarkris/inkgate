@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { useAccount, useSendTransaction, useWaitForTransactionReceipt } from "wagmi";
+import { parseEther } from "viem";
 import Layout from "../../components/Layout";
 
 export default function ArticlePage() {
@@ -8,8 +10,10 @@ export default function ArticlePage() {
   const slug = params?.slug as string;
   const [article, setArticle] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [unlocked, setUnlocked] = useState(false);
   const [teaser, setTeaser] = useState("");
+  const [error, setError] = useState("");
+  const { address, isConnected } = useAccount();
+  const { sendTransactionAsync } = useSendTransaction();
 
   useEffect(() => {
     if (!slug) return;
@@ -17,33 +21,62 @@ export default function ArticlePage() {
   }, [slug]);
 
   const unlock = async () => {
+    setError("");
     setLoading(true);
-    const res = await fetch(`/api/article/${slug}`, {
-      headers: { "X-PAYMENT": "0x0000000000000000000000000000000000000000000000000000000000000001" },
-    });
-    const data = await res.json();
-    setArticle(data);
-    setUnlocked(true);
+    try {
+      let txHash = "0x0000000000000000000000000000000000000000000000000000000000000001";
+
+      if (isConnected && address) {
+        // Send real payment from MetaMask
+        const hash = await sendTransactionAsync({
+          to: process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT as `0x${string}`,
+          value: parseEther("0.01"),
+        });
+        txHash = hash;
+      }
+
+      const res = await fetch(`/api/article/${slug}`, {
+        headers: { "X-PAYMENT": txHash, "X-READER-ADDRESS": address || "" },
+      });
+      const data = await res.json();
+      if (data.error && !data.content) {
+        setError(data.error);
+      } else {
+        setArticle(data);
+      }
+    } catch (err: any) {
+      setError(err?.message?.includes("rejected") ? "Transaction rejected in MetaMask." : (err?.message || "Something went wrong"));
+    }
     setLoading(false);
   };
 
   const title = slug?.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase());
 
   return (
-    <Layout>
+    <Layout heroContent={
+      <div>
+        <div className="section-label">ARTICLE</div>
+        <h1 style={{fontSize:40,fontWeight:800,letterSpacing:-1,marginBottom:12,fontFamily:"var(--font)"}}>{article?.title || title}</h1>
+        <p style={{color:"rgba(255,255,255,0.45)",fontSize:14,fontFamily:"var(--mono)"}}>0.01 OG · 3 agents · TEE verified · 0G Storage</p>
+      </div>
+    }>
       <style>{`
-        .article-hero{padding:48px 0 32px;border-bottom:1px solid var(--border)}
         .article-body{padding:40px 0;max-width:720px}
         .article-tag{font-size:10px;font-family:var(--mono);color:var(--accent);background:rgba(123,110,246,0.1);border:1px solid rgba(123,110,246,0.2);padding:3px 10px;border-radius:3px;display:inline-block;margin-bottom:16px}
-        .article-title{font-size:36px;font-weight:800;letter-spacing:-1px;margin-bottom:16px;font-family:var(--font);line-height:1.2}
-        .article-meta{display:flex;gap:16px;font-size:12px;font-family:var(--mono);color:var(--muted);margin-bottom:24px}
+        .article-meta{display:flex;gap:16px;font-size:12px;font-family:var(--mono);color:var(--muted);margin-bottom:24px;flex-wrap:wrap}
         .meta-green{color:var(--accent2)}
-        .article-teaser{font-size:16px;color:var(--muted);line-height:1.7;margin-bottom:32px;font-style:italic}
-        .unlock-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px;text-align:center;margin-bottom:32px}
+        .article-teaser{font-size:16px;color:var(--muted);line-height:1.7;margin-bottom:32px;font-style:italic;border-left:2px solid var(--accent);padding-left:16px}
+        .unlock-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px;margin-bottom:32px}
         .unlock-title{font-size:18px;font-weight:700;font-family:var(--font);margin-bottom:8px}
         .unlock-sub{font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:24px}
-        .unlock-agents{display:flex;justify-content:center;gap:8px;margin-bottom:24px;flex-wrap:wrap}
-        .unlock-agent{font-size:11px;font-family:var(--mono);padding:4px 10px;border-radius:4px;border:1px solid var(--border);color:var(--muted)}
+        .pipeline-visual{display:flex;align-items:center;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+        .pipe-badge{font-size:11px;font-family:var(--mono);padding:6px 12px;border-radius:4px;border:1px solid var(--border)}
+        .pipe-arrow{color:var(--muted);font-size:12px}
+        .wallet-info{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:12px;font-family:var(--mono);display:flex;align-items:center;gap:8px}
+        .wallet-dot{width:6px;height:6px;border-radius:50%;background:var(--accent2)}
+        .wallet-addr{color:var(--accent2)}
+        .wallet-warning{color:var(--warn);font-size:11px;margin-top:8px}
+        .error-box{background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.2);border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:#f87171;font-family:var(--mono)}
         .article-content{font-size:15px;color:rgba(245,245,240,0.8);line-height:1.9;white-space:pre-wrap;margin-bottom:32px;font-weight:300}
         .article-proof{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:20px}
         .proof-title{font-size:11px;font-family:var(--mono);color:var(--accent);letter-spacing:2px;margin-bottom:14px}
@@ -51,43 +84,19 @@ export default function ArticlePage() {
         .proof-row:last-child{border-bottom:none}
         .proof-key{color:var(--muted)}
         .proof-val{color:var(--accent2);word-break:break-all;max-width:60%;text-align:right}
-        .proof-hash{color:var(--accent)}
-        .pipeline-visual{display:flex;align-items:center;gap:8px;margin-bottom:32px;flex-wrap:wrap}
-        .pipe-badge{font-size:11px;font-family:var(--mono);padding:6px 12px;border-radius:4px;border:1px solid var(--border)}
-        .pipe-arrow{color:var(--muted);font-size:12px}
-
-        @media(max-width:768px){
-          .wrap{padding:0 16px!important}
-          h1{font-size:26px!important;letter-spacing:-0.5px!important}
-          .trending-grid,.agents-grid,.pred-grid,.debate-grid,.articles-grid,.features{grid-template-columns:1fr!important}
-          .chat-wrap{grid-template-columns:1fr!important}
-          .chat-sidebar{border-right:none!important;border-bottom:1px solid var(--border)!important;padding:16px!important}
-          .stats-bar{grid-template-columns:1fr!important}
-          .pipeline,.og-grid{grid-template-columns:1fr!important}
-        }
+        .proof-link{color:var(--accent);text-decoration:none}
+        .proof-link:hover{text-decoration:underline}
+        @media(max-width:768px){.article-body{padding:24px 0}.pipeline-visual{gap:4px}.pipe-badge{font-size:10px;padding:4px 8px}}
       `}</style>
-
-      <div className="article-hero">
-        <div className="wrap">
-          <span className="article-tag">0G ECOSYSTEM</span>
-          <div className="article-title">{article?.title || title}</div>
-          <div className="article-meta">
-            <span className="meta-green">0.01 0G</span>
-            <span>3 autonomous agents</span>
-            <span>TEE verified · 0G Compute</span>
-            <span>Stored on 0G Storage</span>
-          </div>
-          {teaser && !unlocked && <div className="article-teaser">"{teaser}"</div>}
-        </div>
-      </div>
 
       <div className="wrap">
         <div className="article-body">
-          {!unlocked ? (
+          {!article ? (
             <div className="unlock-box">
               <div className="unlock-title">Unlock this article</div>
               <div className="unlock-sub">3 agents will research, fact-check and write this article live on 0G Compute</div>
-              <div className="pipeline-visual" style={{justifyContent:"center",marginBottom:24}}>
+
+              <div className="pipeline-visual">
                 <span className="pipe-badge" style={{background:"#1a1233",color:"#c084fc",borderColor:"rgba(192,132,252,0.2)"}}>Orchestrator</span>
                 <span className="pipe-arrow">→</span>
                 <span className="pipe-badge" style={{background:"#1a1a3e",color:"var(--accent)",borderColor:"rgba(123,110,246,0.2)"}}>Research</span>
@@ -96,20 +105,55 @@ export default function ArticlePage() {
                 <span className="pipe-arrow">→</span>
                 <span className="pipe-badge" style={{background:"#2e1f0f",color:"var(--warn)",borderColor:"rgba(240,160,75,0.2)"}}>Writer</span>
               </div>
-              <button className="btn-primary" onClick={unlock} disabled={loading} style={{fontSize:15,padding:"14px 32px"}}>
-                {loading ? "Agents writing..." : "Unlock with 0.01 0G →"}
-              </button>
+
+              {isConnected && address ? (
+                <div className="wallet-info">
+                  <span className="wallet-dot"></span>
+                  <span>Connected: </span>
+                  <span className="wallet-addr">{address.slice(0,6)}...{address.slice(-4)}</span>
+                  <span style={{color:"var(--muted)",marginLeft:"auto"}}>MetaMask will ask for 0.01 OG</span>
+                </div>
+              ) : (
+                <div className="wallet-info">
+                  <span style={{color:"var(--warn)"}}>⚠ No wallet connected</span>
+                  <span className="wallet-warning" style={{marginLeft:8}}>Connect wallet to pay with MetaMask, or unlock in demo mode</span>
+                </div>
+              )}
+
+              {error && <div className="error-box">{error}</div>}
+
+              <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
+                <button className="btn-primary" onClick={unlock} disabled={loading} style={{fontSize:15,padding:"14px 32px"}}>
+                  {loading ? "Agents writing..." : isConnected ? "Unlock with MetaMask · 0.01 OG →" : "Unlock in demo mode →"}
+                </button>
+              </div>
             </div>
           ) : (
             <>
+              <div className="article-meta">
+                <span className="meta-green">0.01 OG paid</span>
+                <span>3 autonomous agents</span>
+                <span>TEE verified · 0G Compute</span>
+                <span>Stored on 0G Storage</span>
+              </div>
+              {teaser && <div className="article-teaser">"{teaser}"</div>}
               <div className="article-content">{article?.content}</div>
               <div className="article-proof">
                 <div className="proof-title">PROOF OF WORK · 0G NETWORK</div>
                 <div className="proof-row"><span className="proof-key">Network</span><span className="proof-val">{article?.network}</span></div>
                 <div className="proof-row"><span className="proof-key">Generated</span><span className="proof-val">{article?.generatedAt && new Date(article.generatedAt).toLocaleString()}</span></div>
-                {article?.ogStorageHash && <div className="proof-row"><span className="proof-key">0G Storage hash</span><span className="proof-val proof-hash">{article.ogStorageHash}</span></div>}
+                {article?.ogStorageHash && <div className="proof-row"><span className="proof-key">0G Storage</span><span className="proof-val">{article.ogStorageHash}</span></div>}
                 {article?.agentPipeline && Object.entries(article.agentPipeline).map(([k,v]:any) => (
-                  <div key={k} className="proof-row"><span className="proof-key">{k}</span><span className="proof-val">{String(v).slice(0,28)}...</span></div>
+                  <div key={k} className="proof-row">
+                    <span className="proof-key">{k}</span>
+                    {String(v) !== "0x0" && String(v).length > 10 ? (
+                      <a href={`https://chainscan.0g.ai/tx/${v}`} target="_blank" rel="noopener noreferrer" className="proof-link">
+                        {String(v).slice(0,16)}...
+                      </a>
+                    ) : (
+                      <span className="proof-val">{String(v).slice(0,28)}</span>
+                    )}
+                  </div>
                 ))}
               </div>
             </>
