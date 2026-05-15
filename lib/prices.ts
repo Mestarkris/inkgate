@@ -107,10 +107,11 @@ export const SYMBOL_MAP: Record<string, string> = Object.fromEntries(
  * Uses CoinGecko - will show price once listed
  */
 export async function get0GPrice(): Promise<{ price: number | null; message: string }> {
+  // Try CoinGecko simple price first
   try {
     const res = await fetch(
       "https://api.coingecko.com/api/v3/simple/price?ids=zero-gravity&vs_currencies=usd&include_24hr_change=true",
-      { signal: AbortSignal.timeout(5000) }
+      { signal: AbortSignal.timeout(6000), headers: { "Accept": "application/json" } }
     );
     const json = await res.json();
     const data = json["zero-gravity"];
@@ -120,8 +121,24 @@ export async function get0GPrice(): Promise<{ price: number | null; message: str
         message: `0G Token = $${formatPrice(data.usd)} | 24h: ${(data.usd_24h_change ?? 0).toFixed(2)}%`,
       };
     }
-    return { price: null, message: "0G price: not yet listed on CoinGecko" };
-  } catch {
-    return { price: null, message: "0G price: unavailable" };
-  }
+  } catch {}
+
+  // Fallback: CoinGecko markets endpoint
+  try {
+    const res = await fetch(
+      "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=zero-gravity",
+      { signal: AbortSignal.timeout(6000), headers: { "Accept": "application/json" } }
+    );
+    const json = await res.json();
+    const data = json?.[0];
+    if (data?.current_price) {
+      const change = (data.price_change_percentage_24h ?? 0).toFixed(2);
+      return {
+        price: data.current_price,
+        message: `0G Token = $${formatPrice(data.current_price)} | 24h: ${change}%`,
+      };
+    }
+  } catch {}
+
+  return { price: null, message: "0G price: unavailable right now" };
 }
