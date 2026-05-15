@@ -30,11 +30,10 @@ export async function POST(req: Request) {
   const isValid = await verifyPayment(txHash);
   if (!isValid) return Response.json({ error: "Payment not confirmed on 0G Mainnet" }, { status: 402 });
 
-  const [agent1Tx, agent2Tx, agent3Tx] = await Promise.all([
-    send0G(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT1_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0"),
-    send0G(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT2_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0"),
-    send0G(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT3_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0"),
-  ]);
+  // Sequential to avoid nonce conflict (same sender wallet)
+  const agent1Tx = await send0G(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT1_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0");
+  const agent2Tx = await send0G(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT2_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0");
+  const agent3Tx = await send0G(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT3_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0");
 
   const { research, txHash: researchTx } = await researchAgent(topic);
   const { verifiedResearch, txHash: factCheckTx } = await factCheckAgent(topic, research);

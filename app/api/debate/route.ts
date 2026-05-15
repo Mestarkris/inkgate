@@ -27,10 +27,9 @@ export async function POST(req: Request) {
   const isValid = await verifyPayment(txHash);
   if (!isValid) return Response.json({ error: "Payment not confirmed on 0G Mainnet" }, { status: 402 });
 
-  const [bullTx, bearTx] = await Promise.all([
-    send0G(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT1_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0"),
-    send0G(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT2_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0"),
-  ]);
+  // Sequential to avoid nonce conflict (same sender wallet)
+  const bullTx = await send0G(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT1_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0");
+  const bearTx = await send0G(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT2_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0");
 
   const [{ argument: bullArg }, { argument: bearArg }] = await Promise.all([
     bullAgent(topic),
