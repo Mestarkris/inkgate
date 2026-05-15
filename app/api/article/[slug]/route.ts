@@ -50,9 +50,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
     console.log("Orchestrator: received payment", paymentHeader);
     console.log("Orchestrator: splitting 0G to 3 agents...");
 
-    const agent1Tx = await send0G(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT1_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0");
-    const agent2Tx = await send0G(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT2_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0");
-    const agent3Tx = await send0G(process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!, process.env.AGENT3_ADDRESS as `0x${string}`, 0.002).catch(() => "0x0");
+    const [agent1Tx, agent2Tx, agent3Tx] = await send0GParallel(
+      process.env.PAYMENT_RECIPIENT_PRIVATE_KEY!,
+      [
+        { to: process.env.AGENT1_ADDRESS as `0x${string}`, amount: 0.002 },
+        { to: process.env.AGENT2_ADDRESS as `0x${string}`, amount: 0.002 },
+        { to: process.env.AGENT3_ADDRESS as `0x${string}`, amount: 0.002 },
+      ]
+    );
 
     const { research, txHash: researchTx } = await researchAgent(article.title);
     const { verifiedResearch, txHash: factCheckTx } = await factCheckAgent(article.title, research);
