@@ -18,9 +18,19 @@ export default function TrendingPage() {
       { symbol: "SOL", price: "147", change24h: "2.1" },
       { symbol: "USDT", price: "1", change24h: "-0.01" },
     ]);
-    fetch("/api/trending").then(r => r.json()).then(d => {
+    fetch("/api/trending").then(r => r.json()).then(async d => {
       const coins = (d.trending || []).filter((t:any) => t.symbol !== "XRP" && t.symbol !== "USDC");
-      const zeroG = { symbol: "0G", name: "0G Network", price: "—", change24h: "0", is0G: true };
+      let zeroGPrice = "—";
+      let zeroGChange = "0";
+      try {
+        const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=zero-gravity&vs_currencies=usd&include_24hr_change=true");
+        const data = await res.json();
+        if (data["zero-gravity"]?.usd) {
+          zeroGPrice = data["zero-gravity"].usd.toString();
+          zeroGChange = (data["zero-gravity"].usd_24h_change ?? 0).toFixed(2);
+        }
+      } catch {}
+      const zeroG = { symbol: "0G", name: "0G Network", price: zeroGPrice, change24h: zeroGChange, is0G: true };
       setTrending([zeroG, ...coins.slice(0, 6)]);
     }).catch(() => {});
   }, []);
@@ -85,8 +95,8 @@ export default function TrendingPage() {
               {trending.slice(0,7).map((t:any,i:number) => (
                 <div key={i} className="tick">
                   <div className="tick-sym" style={t.is0G ? {color:"var(--accent)"} : {}}>{t.symbol}</div>
-                  <div className="tick-val" style={t.is0G ? {color:"var(--accent)"} : {}}>{t.is0G ? "0G" : "$"+Number(t.price).toLocaleString()}</div>
-                  <div className={t.is0G ? "tick-up" : Number(t.change24h) >= 0 ? "tick-up" : "tick-down"}>{t.is0G ? "● LIVE" : (Number(t.change24h) >= 0 ? "▲" : "▼")+" "+Math.abs(Number(t.change24h))+"%"}</div>
+                  <div className="tick-val" style={t.is0G ? {color:"var(--accent)"} : {}}>{t.is0G && t.price === "—" ? "0G" : "$"+Number(t.price).toLocaleString()}</div>
+                  <div className={t.is0G ? "tick-up" : Number(t.change24h) >= 0 ? "tick-up" : "tick-down"}>{t.is0G && t.price === "—" ? "● LIVE" : t.is0G ? (Number(t.change24h) >= 0 ? "▲" : "▼")+" "+Math.abs(Number(t.change24h))+"%" : (Number(t.change24h) >= 0 ? "▲" : "▼")+" "+Math.abs(Number(t.change24h))+"%"}</div>
                 </div>
               ))}
             </div>
