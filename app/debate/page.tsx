@@ -8,10 +8,46 @@ export default function DebatePage() {
   const [topic, setTopic] = useState("");
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const txHash = "0x0000000000000000000000000000000000000000000000000000000000000001";
+  const [txError, setTxError] = useState("");
 
   const runDebate = async () => {
     if (!topic.trim()) return;
+    setTxError("");
+
+    // Request MetaMask payment first
+    let txHash = "";
+    try {
+      const { BrowserProvider, parseEther } = await import("ethers");
+      const provider = new BrowserProvider((window as any).ethereum);
+      await provider.send("eth_requestAccounts", []);
+      const signer = await provider.getSigner();
+
+      // Switch to 0G Mainnet
+      try {
+        await provider.send("wallet_switchEthereumChain", [{ chainId: "0x411D" }]);
+      } catch (switchErr: any) {
+        if (switchErr.code === 4902) {
+          await provider.send("wallet_addEthereumChain", [{
+            chainId: "0x411D",
+            chainName: "0G Mainnet",
+            nativeCurrency: { name: "0G", symbol: "0G", decimals: 18 },
+            rpcUrls: ["https://evmrpc.0g.ai"],
+            blockExplorerUrls: ["https://chainscan.0g.ai"],
+          }]);
+        }
+      }
+
+      const tx = await signer.sendTransaction({
+        to: process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT_ADDRESS || "",
+        value: parseEther("0.01"),
+      });
+      await tx.wait();
+      txHash = tx.hash;
+    } catch (err: any) {
+      setTxError(err?.message?.slice(0, 80) || "Payment cancelled");
+      return;
+    }
+
     setLoading(true);
     setResult(null);
     const res = await fetch("/api/debate", {
@@ -95,6 +131,7 @@ export default function DebatePage() {
               <span key={i} className="suggestion" onClick={() => setTopic(s)}>{s}</span>
             ))}
           </div>
+          {txError && <div style={{color:"#f87171",fontSize:12,fontFamily:"var(--mono)",marginBottom:8}}>⚠ {txError}</div>}
           <button className="btn-primary" onClick={runDebate} disabled={loading || !topic.trim()} style={{marginBottom:32}}>
             {loading ? "Agents debating on 0G Compute..." : "Start debate · 0.01 0G"}
           </button>
