@@ -1,11 +1,27 @@
 import { send0G } from "@/lib/agents/wallet";
 import { ogInference } from "@/lib/0g-compute";
-import { getLivePrice } from "@/lib/prices";
+import { getLivePrice, get0GPrice } from "@/lib/prices";
+
+const OG_CONTEXT = `
+You are running on 0G Network — a decentralized AI operating system.
+0G Network facts:
+- Native token: 0G (ticker: 0G), trading on Binance, Gate.io, Bitget. The old testnet name was A0GI — that no longer applies.
+- Chain ID: 16661 (0G Mainnet)
+- 0G Storage: decentralized storage optimized for AI (petabyte-scale)
+- 0G Compute: decentralized GPU marketplace with TEE-verified inference
+- 0G Agent ID: tokenized identity standard for AI agents
+- Explorer: chainscan.0g.ai
+- RPC: evmrpc.0g.ai
+- InkGate is built on 0G — articles stored on 0G Storage, inference on 0G Compute
+When asked about the 0G token price: use the live market data provided in the prompt. Never make up a price.
+When asked about 0G token: call it "0G" only. Never say A0GI or OG as a ticker.
+Always be helpful and accurate about the 0G ecosystem.
+`;
 
 const SYSTEM_PROMPTS: Record<string, string> = {
-  research: "You are the InkGate Research Agent running on 0G Compute Network (TEE-verified). Today is " + new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + ". You have live crypto market data. State prices confidently as current fact. NEVER say knowledge cutoff.",
-  factcheck: "You are the InkGate Fact Check Agent running on 0G Compute Network (TEE-verified). Today is " + new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + ". Verify facts confidently. NEVER say knowledge cutoff.",
-  writer: "You are the InkGate Writer Agent running on 0G Compute Network (TEE-verified). Today is " + new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + ". Write sharp, insightful content. NEVER say knowledge cutoff.",
+  research: "You are the InkGate Research Agent running on 0G Compute Network (TEE-verified). Today is " + new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + ". You have live crypto market data and deep knowledge of the 0G ecosystem." + OG_CONTEXT + "State prices confidently. NEVER say knowledge cutoff. NEVER say you cannot find information about 0G.",
+  factcheck: "You are the InkGate Fact Check Agent running on 0G Compute Network (TEE-verified). Today is " + new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + "." + OG_CONTEXT + "Verify facts confidently. NEVER say knowledge cutoff.",
+  writer: "You are the InkGate Writer Agent running on 0G Compute Network (TEE-verified). Today is " + new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + "." + OG_CONTEXT + "Write sharp, insightful content about 0G and crypto. NEVER say knowledge cutoff.",
 };
 
 async function verifyPayment(txHash: string): Promise<boolean> {
@@ -35,8 +51,13 @@ export async function POST(req: Request) {
   if (!isValid) return Response.json({ error: "Payment not confirmed on 0G Mainnet" }, { status: 402 });
 
   const systemPrompt = SYSTEM_PROMPTS[agentId] || SYSTEM_PROMPTS.research;
-  const livePrice = await getLivePrice(message).catch(() => "");
-  const fullPrompt = (livePrice ? "Live market data: " + livePrice + "\n\n" : "") + message;
+  // Always fetch 0G price and inject it so agent never fabricates
+  const [livePrice, zeroGPrice] = await Promise.all([
+    getLivePrice(message).catch(() => ""),
+    get0GPrice().catch(() => ({ price: null, message: "" })),
+  ]);
+  const zeroGContext = zeroGPrice.message ? `\nLive 0G token price: ${zeroGPrice.message}` : "";
+  const fullPrompt = (livePrice ? "Live market data: " + livePrice + "\n" : "") + zeroGContext + "\n\n" + message;
 
   const { content, verified } = await ogInference(systemPrompt, fullPrompt, 300);
 

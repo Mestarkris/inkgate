@@ -32,7 +32,7 @@ const COINGECKO_IDS: Record<string, string> = {
   maker: "maker",           mkr: "maker",
   render: "render-token",   rndr: "render-token",
   ton: "the-open-network",
-  og: "bitcoin",
+  og: "zero-gravity",       a0gi: "zero-gravity",
   crypto: "bitcoin",        defi: "ethereum",
 };
 
