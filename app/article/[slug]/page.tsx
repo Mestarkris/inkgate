@@ -1,8 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { useAccount, useSendTransaction, useWaitForTransactionReceipt } from "wagmi";
-import { parseEther } from "viem";
 import Layout from "../../components/Layout";
 
 export default function ArticlePage() {
@@ -12,8 +10,24 @@ export default function ArticlePage() {
   const [loading, setLoading] = useState(false);
   const [teaser, setTeaser] = useState("");
   const [error, setError] = useState("");
-  const { address, isConnected } = useAccount();
-  const { sendTransactionAsync } = useSendTransaction();
+  const [address, setAddress] = useState<string>("");
+  const [isConnected, setIsConnected] = useState(false);
+
+  useEffect(() => {
+    if (!(window as any).ethereum) return;
+    (window as any).ethereum.request({ method: "eth_accounts" }).then((accounts: string[]) => {
+      if (accounts[0]) { setAddress(accounts[0]); setIsConnected(true); }
+    });
+    (window as any).ethereum.on("accountsChanged", (accounts: string[]) => {
+      setAddress(accounts[0] || ""); setIsConnected(!!accounts[0]);
+    });
+  }, []);
+
+  const connectWallet = async () => {
+    if (!(window as any).ethereum) { alert("Please install MetaMask"); return; }
+    const accounts = await (window as any).ethereum.request({ method: "eth_requestAccounts" });
+    if (accounts[0]) { setAddress(accounts[0]); setIsConnected(true); }
+  };
 
   useEffect(() => {
     if (!slug) return;
@@ -27,12 +41,26 @@ export default function ArticlePage() {
       let txHash = "0x0000000000000000000000000000000000000000000000000000000000000001";
 
       if (isConnected && address) {
-        // Send real payment from MetaMask
-        const hash = await sendTransactionAsync({
-          to: process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT as `0x${string}`,
-          value: parseEther("0.01"),
-        });
-        txHash = hash;
+        const { BrowserProvider, parseEther } = await import("ethers");
+        const provider = new BrowserProvider((window as any).ethereum);
+        try {
+          await provider.send("wallet_switchEthereumChain", [{ chainId: "0x411D" }]);
+        } catch (switchErr: any) {
+          if (switchErr.code === 4902 || switchErr.code === -32603) {
+            await provider.send("wallet_addEthereumChain", [{
+              chainId: "0x411D", chainName: "0G Mainnet",
+              nativeCurrency: { name: "0G", symbol: "0G", decimals: 18 },
+              rpcUrls: ["https://evmrpc.0g.ai"],
+              blockExplorerUrls: ["https://chainscan.0g.ai"],
+            }]);
+          }
+        }
+        const signer = await provider.getSigner();
+        const recipient = process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT_ADDRESS;
+        if (!recipient) throw new Error("Payment address not configured.");
+        const tx = await signer.sendTransaction({ to: recipient, value: parseEther("0.01") });
+        await tx.wait();
+        txHash = tx.hash;
       }
 
       const res = await fetch(`/api/article/${slug}`, {
@@ -57,7 +85,7 @@ export default function ArticlePage() {
       <div>
         <div className="section-label">ARTICLE</div>
         <h1 style={{fontSize:40,fontWeight:800,letterSpacing:-1,marginBottom:12,fontFamily:"var(--font)"}}>{article?.title || title}</h1>
-        <p style={{color:"rgba(255,255,255,0.45)",fontSize:14,fontFamily:"var(--mono)"}}>0.01 OG · 3 agents · TEE verified · 0G Storage</p>
+        <p style={{color:"rgba(255,255,255,0.45)",fontSize:14,fontFamily:"var(--mono)"}}>0.01 0G · 3 agents · TEE verified · 0G Storage</p>
       </div>
     }>
       <style>{`
@@ -111,12 +139,12 @@ export default function ArticlePage() {
                   <span className="wallet-dot"></span>
                   <span>Connected: </span>
                   <span className="wallet-addr">{address.slice(0,6)}...{address.slice(-4)}</span>
-                  <span style={{color:"var(--muted)",marginLeft:"auto"}}>MetaMask will ask for 0.01 OG</span>
+                  <span style={{color:"var(--muted)",marginLeft:"auto"}}>MetaMask will ask for 0.01 0G</span>
                 </div>
               ) : (
                 <div className="wallet-info">
-                  <span style={{color:"var(--warn)"}}>⚠ No wallet connected</span>
-                  <span className="wallet-warning" style={{marginLeft:8}}>Connect wallet to pay with MetaMask, or unlock in demo mode</span>
+                  <span style={{color:"var(--warn)"}}>⚠ No wallet connected · </span>
+                  <button onClick={connectWallet} style={{background:"none",border:"none",color:"var(--accent)",cursor:"pointer",fontFamily:"var(--mono)",fontSize:12,textDecoration:"underline"}}>Connect MetaMask</button>
                 </div>
               )}
 
@@ -124,7 +152,7 @@ export default function ArticlePage() {
 
               <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
                 <button className="btn-primary" onClick={unlock} disabled={loading} style={{fontSize:15,padding:"14px 32px"}}>
-                  {loading ? "Agents writing..." : isConnected ? "Unlock with MetaMask · 0.01 OG →" : "Unlock in demo mode →"}
+                  {loading ? "Agents writing..." : isConnected ? "Unlock with MetaMask · 0.01 0G →" : "Unlock in demo mode →"}
                 </button>
               </div>
             </div>

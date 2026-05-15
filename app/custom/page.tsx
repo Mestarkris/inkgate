@@ -8,10 +8,44 @@ export default function CustomPage() {
   const [topic, setTopic] = useState("");
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const txHash = "0x0000000000000000000000000000000000000000000000000000000000000001";
+
+  const payWithMetaMask = async (): Promise<string> => {
+    if (!(window as any).ethereum) throw new Error("MetaMask not found. Please install MetaMask.");
+    const { BrowserProvider, parseEther } = await import("ethers");
+    const provider = new BrowserProvider((window as any).ethereum);
+    await provider.send("eth_requestAccounts", []);
+    try {
+      await provider.send("wallet_switchEthereumChain", [{ chainId: "0x411D" }]);
+    } catch (switchErr: any) {
+      if (switchErr.code === 4902 || switchErr.code === -32603) {
+        await provider.send("wallet_addEthereumChain", [{
+          chainId: "0x411D", chainName: "0G Mainnet",
+          nativeCurrency: { name: "0G", symbol: "0G", decimals: 18 },
+          rpcUrls: ["https://evmrpc.0g.ai"],
+          blockExplorerUrls: ["https://chainscan.0g.ai"],
+        }]);
+      } else { throw switchErr; }
+    }
+    const signer = await provider.getSigner();
+    const recipient = process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT_ADDRESS;
+    if (!recipient) throw new Error("Payment address not configured.");
+    const tx = await signer.sendTransaction({ to: recipient, value: parseEther("0.01") });
+    await tx.wait();
+    return tx.hash;
+  };
+
+  const [txError, setTxError] = useState("");
 
   const generate = async () => {
     if (!topic.trim()) return;
+    setTxError("");
+    let txHash = "";
+    try {
+      txHash = await payWithMetaMask();
+    } catch (err: any) {
+      setTxError(err?.message?.slice(0, 100) || "Payment failed");
+      return;
+    }
     setLoading(true);
     setResult(null);
     const res = await fetch("/api/custom", {
@@ -67,6 +101,7 @@ export default function CustomPage() {
       <div className="custom-body">
         <div className="wrap">
           <input className="custom-input" placeholder="e.g. The future of decentralized AI on 0G Network..." value={topic} onChange={e => setTopic(e.target.value)} onKeyDown={e => e.key === "Enter" && generate()} />
+          {txError && <div style={{color:"#f87171",fontSize:12,fontFamily:"var(--mono)",marginBottom:8}}>⚠ {txError}</div>}
           <button className="btn-primary" onClick={generate} disabled={loading || !topic.trim()}>
             {loading ? "Agents writing..." : "Generate article · 0.01 0G"}
           </button>

@@ -15,10 +15,44 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const txHash = "0x0000000000000000000000000000000000000000000000000000000000000001";
+
+  const payWithMetaMask = async (): Promise<string> => {
+    if (!(window as any).ethereum) throw new Error("MetaMask not found. Please install MetaMask.");
+    const { BrowserProvider, parseEther } = await import("ethers");
+    const provider = new BrowserProvider((window as any).ethereum);
+    await provider.send("eth_requestAccounts", []);
+    try {
+      await provider.send("wallet_switchEthereumChain", [{ chainId: "0x411D" }]);
+    } catch (switchErr: any) {
+      if (switchErr.code === 4902 || switchErr.code === -32603) {
+        await provider.send("wallet_addEthereumChain", [{
+          chainId: "0x411D", chainName: "0G Mainnet",
+          nativeCurrency: { name: "0G", symbol: "0G", decimals: 18 },
+          rpcUrls: ["https://evmrpc.0g.ai"],
+          blockExplorerUrls: ["https://chainscan.0g.ai"],
+        }]);
+      } else { throw switchErr; }
+    }
+    const signer = await provider.getSigner();
+    const recipient = process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT_ADDRESS;
+    if (!recipient) throw new Error("Payment address not configured.");
+    const tx = await signer.sendTransaction({ to: recipient, value: parseEther("0.01") });
+    await tx.wait();
+    return tx.hash;
+  };
+
+  const [txError, setTxError] = useState("");
 
   const send = async () => {
     if (!input.trim()) return;
+    setTxError("");
+    let txHash = "";
+    try {
+      txHash = await payWithMetaMask();
+    } catch (err: any) {
+      setTxError(err?.message?.slice(0, 100) || "Payment failed");
+      return;
+    }
     const userMsg = { role: "user", content: input };
     setMessages(m => [...m, userMsg]);
     setInput("");
@@ -110,6 +144,7 @@ export default function ChatPage() {
             {loading && <div className="msg-agent">Thinking via 0G Compute...</div>}
           </div>
           <div className="chat-input-row">
+            {txError && <div style={{color:"#f87171",fontSize:11,fontFamily:"var(--mono)",padding:"0 0 6px 0"}}>⚠ {txError}</div>}
             <input className="chat-input" placeholder={`Ask ${agent?.name} anything...`} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && send()} />
             <button className="btn-primary" onClick={send} disabled={loading || !input.trim()}>Send</button>
           </div>
