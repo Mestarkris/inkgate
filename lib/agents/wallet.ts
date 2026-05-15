@@ -21,20 +21,52 @@ export function createAgentWallet(privateKey: string) {
   return { client, account };
 }
 
+import { createPublicClient } from "viem";
+
+const publicClient = createPublicClient({
+  chain: ogChain,
+  transport: http("https://evmrpc.0g.ai"),
+});
+
 export async function send0G(
   privateKey: string,
   to: `0x${string}`,
-  amount: number
+  amount: number,
+  nonceOverride?: number
 ) {
   const { client, account } = createAgentWallet(privateKey);
+  const nonce = nonceOverride !== undefined
+    ? nonceOverride
+    : await publicClient.getTransactionCount({ address: account.address });
   const hash = await client.sendTransaction({
     account,
     to,
     value: parseEther(amount.toFixed(18)),
     chain: ogChain,
+    nonce,
   });
   console.log(`[0G] Sent ${amount} 0G to ${to} — tx: ${hash}`);
   return hash;
+}
+
+export async function send0GParallel(
+  privateKey: string,
+  recipients: { to: `0x${string}`; amount: number }[]
+): Promise<string[]> {
+  const { client, account } = createAgentWallet(privateKey);
+  const baseNonce = await publicClient.getTransactionCount({ address: account.address });
+  const txs = await Promise.all(
+    recipients.map(({ to, amount }, i) =>
+      client.sendTransaction({
+        account,
+        to,
+        value: parseEther(amount.toFixed(18)),
+        chain: ogChain,
+        nonce: baseNonce + i,
+      }).catch(() => "0x0" as string)
+    )
+  );
+  return txs;
 }
 
 

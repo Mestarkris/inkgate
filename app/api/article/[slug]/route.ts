@@ -2,7 +2,7 @@ import { getArticle } from "@/lib/articles";
 import { researchAgent } from "@/lib/agents/research";
 import { factCheckAgent } from "@/lib/agents/factcheck";
 import { writerAgent } from "@/lib/agents/writer";
-import { send0G } from "@/lib/agents/wallet";
+import { send0G, send0GParallel } from "@/lib/agents/wallet";
 import { storeArticle } from "@/lib/0g";
 
 async function verifyPayment(txHash: string): Promise<boolean> {
