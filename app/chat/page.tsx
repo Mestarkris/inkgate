@@ -15,70 +15,51 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const payWithMetaMask = async (): Promise<string> => {
-    if (!(window as any).ethereum) throw new Error("MetaMask not found. Please install MetaMask.");
-    const { BrowserProvider, parseEther } = await import("ethers");
-
-    // Request accounts first
-    const accounts = await (window as any).ethereum.request({ method: "eth_requestAccounts" }).catch((e: any) => { throw new Error("Please unlock MetaMask and try again."); });
-    if (!accounts || accounts.length === 0) throw new Error("No MetaMask account found. Please unlock MetaMask.");
-
-    const provider = new BrowserProvider((window as any).ethereum);
-
-    // Add 0G Mainnet (safe even if already added)
-    try {
-      await (window as any).ethereum.request({
-        method: "wallet_addEthereumChain",
-        params: [{
-          chainId: "0x411D",
-          chainName: "0G Mainnet",
-          nativeCurrency: { name: "0G", symbol: "0G", decimals: 18 },
-          rpcUrls: ["https://evmrpc.0g.ai"],
-          blockExplorerUrls: ["https://chainscan.0g.ai"],
-        }],
-      });
-    } catch (_) {}
-
-    // Switch to 0G Mainnet
-    try {
-      await (window as any).ethereum.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: "0x411D" }],
-      });
-    } catch (_) {}
-
-    const signer = await provider.getSigner();
-    const recipient = process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT_ADDRESS || "0x1ba840fb6fC2a1a9cd9880803d920228DCF919E9";
-    const tx = await signer.sendTransaction({ to: recipient, value: parseEther("0.01") });
-    await tx.wait();
-    return tx.hash;
-  };
-
-
   const [txError, setTxError] = useState("");
 
-  const send = async () => {
+  const payAndSend = async () => {
     if (!input.trim()) return;
     setTxError("");
+
     let txHash = "";
+    let userAddress = "";
+
     try {
-      txHash = await payWithMetaMask();
+      if (!(window as any).ethereum) throw new Error("MetaMask not found. Please install MetaMask.");
+      const accounts = await (window as any).ethereum.request({ method: "eth_requestAccounts" });
+      if (!accounts?.length) throw new Error("Please unlock MetaMask and try again.");
+      userAddress = accounts[0];
+
+      const { BrowserProvider, parseEther } = await import("ethers");
+      try { await (window as any).ethereum.request({ method: "wallet_addEthereumChain", params: [{ chainId: "0x411D", chainName: "0G Mainnet", nativeCurrency: { name: "0G", symbol: "0G", decimals: 18 }, rpcUrls: ["https://evmrpc.0g.ai"], blockExplorerUrls: ["https://chainscan.0g.ai"] }] }); } catch (_) {}
+      try { await (window as any).ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x411D" }] }); } catch (_) {}
+
+      const provider = new BrowserProvider((window as any).ethereum);
+      const signer = await provider.getSigner();
+      const recipient = process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT_ADDRESS || "0x1ba840fb6fC2a1a9cd9880803d920228DCF919E9";
+      const tx = await signer.sendTransaction({ to: recipient, value: parseEther("0.01") });
+      await tx.wait();
+      txHash = tx.hash;
     } catch (err: any) {
       setTxError(err?.message?.slice(0, 100) || "Payment failed");
       return;
     }
+
     const userMsg = { role: "user", content: input };
     setMessages(m => [...m, userMsg]);
     setInput("");
     setLoading(true);
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: input, agentId, txHash }),
-    });
-    const data = await res.json();
-    setMessages(m => [...m, { role: "agent", content: data.reply, teeVerified: data.teeVerified, agentTx: data.agentTx }]);
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMsg.content, agentId, txHash, userAddress }),
+      });
+      const data = await res.json();
+      setMessages(m => [...m, { role: "agent", content: data.reply, teeVerified: data.teeVerified, agentTx: data.agentTx }]);
+    } catch {
+      setMessages(m => [...m, { role: "agent", content: "Something went wrong. Please try again." }]);
+    }
     setLoading(false);
   };
 
@@ -108,21 +89,14 @@ export default function ChatPage() {
         .msg-agent{align-self:flex-start;background:var(--surface);border:1px solid var(--border);padding:12px 16px;border-radius:2px 12px 12px 12px;max-width:70%;font-size:14px;line-height:1.6;color:var(--muted)}
         .msg-meta{font-size:10px;font-family:var(--mono);color:var(--muted);margin-top:6px}
         .msg-tee{color:var(--accent2)}
-        .chat-input-row{display:flex;gap:8px;padding:16px 24px;border-top:1px solid var(--border)}
+        .chat-input-row{display:flex;flex-direction:column;gap:6px;padding:16px 24px;border-top:1px solid var(--border)}
         .chat-input{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:12px 16px;border-radius:8px;font-size:14px;font-family:var(--mono);outline:none}
         .chat-input:focus{border-color:var(--accent)}
         .chat-input::placeholder{color:var(--muted)}
+        .chat-input-btns{display:flex;gap:8px}
         .empty-chat{text-align:center;padding:60px 20px;color:var(--muted);font-family:var(--mono)}
-
-        @media(max-width:768px){
-          .wrap{padding:0 16px!important}
-          h1{font-size:26px!important;letter-spacing:-0.5px!important}
-          .trending-grid,.agents-grid,.pred-grid,.debate-grid,.articles-grid,.features{grid-template-columns:1fr!important}
-          .chat-wrap{grid-template-columns:1fr!important}
-          .chat-sidebar{border-right:none!important;border-bottom:1px solid var(--border)!important;padding:16px!important}
-          .stats-bar{grid-template-columns:1fr!important}
-          .pipeline,.og-grid{grid-template-columns:1fr!important}
-        }
+        .tx-err{color:#f87171;font-size:11px;font-family:var(--mono)}
+        @media(max-width:768px){.chat-wrap{grid-template-columns:1fr!important}.chat-sidebar{border-right:none!important;border-bottom:1px solid var(--border)!important;padding:16px!important}}
       `}</style>
       <div className="chat-wrap">
         <div className="chat-sidebar">
@@ -159,9 +133,11 @@ export default function ChatPage() {
             {loading && <div className="msg-agent">Thinking via 0G Compute...</div>}
           </div>
           <div className="chat-input-row">
-            {txError && <div style={{color:"#f87171",fontSize:11,fontFamily:"var(--mono)",padding:"0 0 6px 0"}}>⚠ {txError}</div>}
-            <input className="chat-input" placeholder={`Ask ${agent?.name} anything...`} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && send()} />
-            <button className="btn-primary" onClick={send} disabled={loading || !input.trim()}>Send</button>
+            {txError && <div className="tx-err">⚠ {txError}</div>}
+            <div className="chat-input-btns">
+              <input className="chat-input" placeholder={`Ask ${agent?.name} anything...`} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && !loading && payAndSend()} />
+              <button className="btn-primary" onClick={payAndSend} disabled={loading || !input.trim()}>Send</button>
+            </div>
           </div>
         </div>
       </div>
