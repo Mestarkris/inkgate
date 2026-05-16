@@ -14,13 +14,22 @@ export default function ArticlePage() {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    if (!(window as any).ethereum) return;
-    (window as any).ethereum.request({ method: "eth_accounts" }).then((accounts: string[]) => {
-      if (accounts[0]) { setAddress(accounts[0]); setIsConnected(true); }
-    });
-    (window as any).ethereum.on("accountsChanged", (accounts: string[]) => {
-      setAddress(accounts[0] || ""); setIsConnected(!!accounts[0]);
-    });
+    const checkWallet = async () => {
+      if (!(window as any).ethereum) return;
+      try {
+        const accounts = await (window as any).ethereum.request({ method: "eth_accounts" });
+        if (accounts?.[0]) { setAddress(accounts[0]); setIsConnected(true); }
+      } catch {}
+    };
+    checkWallet();
+    // Re-check every 2 seconds in case MetaMask loads after page
+    const interval = setInterval(checkWallet, 2000);
+    if ((window as any).ethereum) {
+      (window as any).ethereum.on("accountsChanged", (accounts: string[]) => {
+        setAddress(accounts[0] || ""); setIsConnected(!!accounts[0]);
+      });
+    }
+    return () => clearInterval(interval);
   }, []);
 
   const connectWallet = async () => {
