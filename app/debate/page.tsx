@@ -20,7 +20,7 @@ export default function DebatePage() {
     try {
       if (!(window as any).ethereum) throw new Error("MetaMask not found. Please install MetaMask.");
       const accounts = await (window as any).ethereum.request({ method: "eth_requestAccounts" });
-      if (!accounts?.length) throw new Error("Please unlock MetaMask and try again.");
+      if (!accounts?.length) { await (window as any).ethereum.request({ method: "eth_requestAccounts" }); const a2 = await (window as any).ethereum.request({ method: "eth_accounts" }); if (!a2?.length) throw new Error("Please open MetaMask, unlock your wallet, and try again."); userAddress = a2[0]; }
       userAddress = accounts[0];
 
       const { BrowserProvider, parseEther } = await import("ethers");
