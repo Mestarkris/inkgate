@@ -72,7 +72,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
       txHash: paymentHeader,
     }).catch(() => null);
 
-    await fetch(new URL("/api/stats", req.url), { method: "POST" }).catch(() => {});
+    const readerAddr = req.headers.get("X-READER-ADDRESS") || "global";
+    await fetch(new URL(`/api/stats?wallet=${readerAddr}`, req.url), { method: "POST" }).catch(() => {});
 
     return Response.json({
       title: article.title,

@@ -15,7 +15,7 @@ async function verifyPayment(txHash: string): Promise<boolean> {
 }
 
 export async function POST(req: Request) {
-  const { topic, txHash } = await req.json();
+  const { topic, txHash, userAddress } = await req.json();
 
   if (!txHash) {
     return Response.json({
@@ -45,6 +45,7 @@ export async function POST(req: Request) {
 
   const { verdict } = await judgeAgent(topic, bullArg, bearArg);
 
+  await fetch(new URL(`/api/stats?wallet=${userAddress || "global"}`, req.url), { method: "POST" }).catch(() => {});
   return Response.json({
     topic, bullArg, bearArg, verdict,
     network: "0G Mainnet",

@@ -1,17 +1,31 @@
 import { getAgentStats, storeAgentStats } from "@/lib/0g";
 
-export async function GET() {
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const wallet = searchParams.get("wallet") || "global";
   const stats = await getAgentStats();
-  return Response.json({ ...stats, network: "0G Mainnet", updatedAt: new Date().toISOString() });
+  const userStats = (stats as any)[wallet] || { articlesGenerated: 0, totalPaid: 0 };
+  return Response.json({ 
+    ...userStats,
+    agents: 4, 
+    network: "0G Mainnet", 
+    wallet,
+    updatedAt: new Date().toISOString() 
+  });
 }
 
-export async function POST() {
-  const current = await getAgentStats() as Record<string, unknown>;
+export async function POST(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const wallet = searchParams.get("wallet") || "global";
+  const current = await getAgentStats() as Record<string, any>;
+  const userCurrent = current[wallet] || { articlesGenerated: 0, totalPaid: 0 };
   const updated = {
     ...current,
-    articlesGenerated: ((current.articlesGenerated as number) || 0) + 1,
-    totalPaid: ((current.totalPaid as number) || 0) + 0.01,
-    lastArticleAt: new Date().toISOString(),
+    [wallet]: {
+      articlesGenerated: (userCurrent.articlesGenerated || 0) + 1,
+      totalPaid: (userCurrent.totalPaid || 0) + 0.01,
+      lastArticleAt: new Date().toISOString(),
+    }
   };
   await storeAgentStats(updated);
   return Response.json({ success: true });

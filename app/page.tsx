@@ -7,9 +7,35 @@ import Link from "next/link";
 
 export default function Home() {
   const [stats, setStats] = useState({ articlesGenerated: 0, totalPaid: 0 });
+  const [myArticles, setMyArticles] = useState<any[]>([]);
+  const [myAddress, setMyAddress] = useState<string>('');
+
+  const loadUserData = () => {
+    if (typeof window !== 'undefined') {
+      const addr = localStorage.getItem('connectedWallet') || '';
+      setMyAddress(addr);
+      const key = `inkgate_articles_${addr || 'guest'}`;
+      const history = JSON.parse(localStorage.getItem(key) || '[]');
+      setMyArticles(history.slice(0, 6));
+      setStats({ articlesGenerated: history.length, totalPaid: parseFloat((history.length * 0.01).toFixed(4)) });
+    }
+  };
 
   useEffect(() => {
-    fetch("/api/stats").then(r => r.json()).then(d => setStats(d)).catch(() => {});
+    loadUserData();
+    window.addEventListener('storage', loadUserData);
+    return () => window.removeEventListener('storage', loadUserData);
+    if (typeof window !== 'undefined') {
+      const addr = localStorage.getItem('connectedWallet') || '';
+      setMyAddress(addr);
+      const key = `inkgate_articles_${addr || 'guest'}`;
+      const history = JSON.parse(localStorage.getItem(key) || '[]');
+      setMyArticles(history.slice(0, 6));
+      setStats({
+        articlesGenerated: history.length,
+        totalPaid: history.length * 0.01,
+      });
+    }
   }, []);
 
   return (
@@ -190,6 +216,25 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* MY ARTICLES */}
+      {myArticles.length > 0 && (
+        <section className="section">
+          <div className="wrap">
+            <div className="section-label">MY ARTICLES</div>
+            <div className="section-title">Your unlocked articles{myAddress && <span style={{fontSize:14,fontWeight:400,color:"var(--muted)",marginLeft:12,fontFamily:"var(--mono)"}}>{myAddress.slice(0,6)}...{myAddress.slice(-4)}</span>}</div>
+            <div className="articles-grid">
+              {myArticles.map((a:any, i:number) => (
+                <a key={i} href={`/article/${a.slug}`} className="article-card">
+                  <div className="article-num">#{String(i+1).padStart(2,'0')}</div>
+                  <div className="article-title">{a.title}</div>
+                  <div className="article-price">{new Date(a.generatedAt).toLocaleDateString()} · Unlocked</div>
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* FEATURES */}
       <section className="section">

@@ -63,13 +63,7 @@ export default function AgentsPage() {
         }
       `}</style>
 
-      <div className="agents-hero">
-        <div className="wrap">
-          <div className="section-label">AGENT REGISTRY</div>
-          <h1 style={{fontSize:40,fontWeight:800,letterSpacing:-1,marginBottom:12,fontFamily:"var(--font)"}}>Autonomous agent wallets</h1>
-          <p style={{color:"var(--muted)",fontSize:15,fontFamily:"var(--mono)"}}>Every InkGate agent is a real autonomous wallet on 0G. Identities stored via Agent ID protocol.</p>
-        </div>
-      </div>
+
 
       <div className="wrap" style={{paddingTop:40}}>
         <div className="stats-bar">

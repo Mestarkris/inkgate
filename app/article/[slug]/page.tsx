@@ -34,6 +34,15 @@ export default function ArticlePage() {
     fetch(`/api/teaser/${slug}`).then(r => r.json()).then(d => setTeaser(d.teaser || "")).catch(() => {});
   }, [slug]);
 
+  const switchToOG = async () => {
+    try {
+      await (window as any).ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x4115' }] });
+    } catch (e: any) {
+      if (e.code === 4902) {
+        await (window as any).ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId: '0x4115', chainName: '0G Mainnet', nativeCurrency: { name: '0G', symbol: 'OG', decimals: 18 }, rpcUrls: ['https://evmrpc.0g.ai'], blockExplorerUrls: ['https://chainscan.0g.ai'] }] });
+      }
+    }
+  };
   const unlock = async () => {
     setError("");
     setLoading(true);
