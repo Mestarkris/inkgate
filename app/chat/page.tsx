@@ -19,24 +19,42 @@ export default function ChatPage() {
   const payWithMetaMask = async (): Promise<string> => {
     if (!(window as any).ethereum) throw new Error("MetaMask not found. Please install MetaMask.");
     const { BrowserProvider, parseEther } = await import("ethers");
+
+    // Request accounts first
+    const accounts = await (window as any).ethereum.request({ method: "eth_requestAccounts" }).catch((e: any) => { throw new Error("Please unlock MetaMask and try again."); });
+    if (!accounts || accounts.length === 0) throw new Error("No MetaMask account found. Please unlock MetaMask.");
+
     const provider = new BrowserProvider((window as any).ethereum);
-    await provider.send("eth_requestAccounts", []);
+
+    // Add 0G Mainnet (safe even if already added)
     try {
-      await provider.send("wallet_addEthereumChain", [{
-        chainId: "0x411D",
-        chainName: "0G Mainnet",
-        nativeCurrency: { name: "0G", symbol: "0G", decimals: 18 },
-        rpcUrls: ["https://evmrpc.0g.ai"],
-        blockExplorerUrls: ["https://chainscan.0g.ai"],
-      }]);
+      await (window as any).ethereum.request({
+        method: "wallet_addEthereumChain",
+        params: [{
+          chainId: "0x411D",
+          chainName: "0G Mainnet",
+          nativeCurrency: { name: "0G", symbol: "0G", decimals: 18 },
+          rpcUrls: ["https://evmrpc.0g.ai"],
+          blockExplorerUrls: ["https://chainscan.0g.ai"],
+        }],
+      });
     } catch (_) {}
-    await provider.send("wallet_switchEthereumChain", [{ chainId: "0x411D" }]).catch(() => {});
+
+    // Switch to 0G Mainnet
+    try {
+      await (window as any).ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: "0x411D" }],
+      });
+    } catch (_) {}
+
     const signer = await provider.getSigner();
     const recipient = process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT_ADDRESS || "0x1ba840fb6fC2a1a9cd9880803d920228DCF919E9";
     const tx = await signer.sendTransaction({ to: recipient, value: parseEther("0.01") });
     await tx.wait();
     return tx.hash;
   };
+
 
   const [txError, setTxError] = useState("");
 
