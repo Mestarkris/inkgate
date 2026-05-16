@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import { useAccount, useWalletClient } from "wagmi";
+import { parseEther } from "viem";
 import Layout from "../components/Layout";
 
 export const dynamic = "force-dynamic";
@@ -9,32 +11,22 @@ export default function CustomPage() {
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [txError, setTxError] = useState("");
+  const { address, isConnected } = useAccount();
+  const { data: walletClient } = useWalletClient();
 
   const generate = async () => {
     if (!topic.trim()) return;
     setTxError("");
+    if (!isConnected || !walletClient) { setTxError("Please connect your wallet using the button in the top right."); return; }
 
     let txHash = "";
-    let userAddress = "";
-
     try {
-      if (!(window as any).ethereum) throw new Error("MetaMask not found. Please install MetaMask.");
-      const accounts = await (window as any).ethereum.request({ method: "eth_requestAccounts" });
-      if (!accounts?.length) { await (window as any).ethereum.request({ method: "eth_requestAccounts" }); const a2 = await (window as any).ethereum.request({ method: "eth_accounts" }); if (!a2?.length) throw new Error("Please open MetaMask, unlock your wallet, and try again."); userAddress = a2[0]; }
-      userAddress = accounts[0];
-
-      const { BrowserProvider, parseEther } = await import("ethers");
-      try { await (window as any).ethereum.request({ method: "wallet_addEthereumChain", params: [{ chainId: "0x411D", chainName: "0G Mainnet", nativeCurrency: { name: "0G", symbol: "0G", decimals: 18 }, rpcUrls: ["https://evmrpc.0g.ai"], blockExplorerUrls: ["https://chainscan.0g.ai"] }] }); } catch (_) {}
-      try { await (window as any).ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x411D" }] }); } catch (_) {}
-
-      const provider = new BrowserProvider((window as any).ethereum);
-      const signer = await provider.getSigner();
-      const recipient = process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT_ADDRESS || "0x1ba840fb6fC2a1a9cd9880803d920228DCF919E9";
-      const tx = await signer.sendTransaction({ to: recipient, value: parseEther("0.01") });
-      await tx.wait();
-      txHash = tx.hash;
+      txHash = await walletClient.sendTransaction({
+        to: (process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT_ADDRESS || "0x1ba840fb6fC2a1a9cd9880803d920228DCF919E9") as `0x${string}`,
+        value: parseEther("0.01"),
+      });
     } catch (err: any) {
-      setTxError(err?.message?.slice(0, 100) || "Payment failed");
+      setTxError(err?.message?.includes("rejected") ? "Transaction rejected." : (err?.message?.slice(0, 100) || "Payment failed"));
       return;
     }
 
@@ -44,7 +36,7 @@ export default function CustomPage() {
       const res = await fetch("/api/custom", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic, txHash, userAddress }),
+        body: JSON.stringify({ topic, txHash, userAddress: address }),
       });
       const data = await res.json();
       setResult(data);
@@ -80,7 +72,8 @@ export default function CustomPage() {
         <div className="wrap">
           <input className="custom-input" placeholder="e.g. The future of decentralized AI on 0G Network..." value={topic} onChange={e => setTopic(e.target.value)} onKeyDown={e => e.key === "Enter" && !loading && generate()} />
           {txError && <div className="tx-err">⚠ {txError}</div>}
-          <button className="btn-primary" onClick={generate} disabled={loading || !topic.trim()}>
+          {!isConnected && <div className="tx-err" style={{marginBottom:8}}>⚠ Connect your wallet (top right) before generating.</div>}
+          <button className="btn-primary" onClick={generate} disabled={loading || !topic.trim() || !isConnected}>
             {loading ? "Agents writing..." : "Generate article · 0.01 0G"}
           </button>
           {result?.content && (

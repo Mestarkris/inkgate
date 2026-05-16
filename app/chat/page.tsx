@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import { useAccount, useWalletClient } from "wagmi";
+import { parseEther } from "viem";
 import Layout from "../components/Layout";
 
 const AGENTS = [
@@ -16,32 +18,22 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [txError, setTxError] = useState("");
+  const { address, isConnected } = useAccount();
+  const { data: walletClient } = useWalletClient();
 
   const payAndSend = async () => {
     if (!input.trim()) return;
     setTxError("");
+    if (!isConnected || !walletClient) { setTxError("Please connect your wallet using the button in the top right."); return; }
 
     let txHash = "";
-    let userAddress = "";
-
     try {
-      if (!(window as any).ethereum) throw new Error("MetaMask not found. Please install MetaMask.");
-      const accounts = await (window as any).ethereum.request({ method: "eth_requestAccounts" });
-      if (!accounts?.length) { await (window as any).ethereum.request({ method: "eth_requestAccounts" }); const a2 = await (window as any).ethereum.request({ method: "eth_accounts" }); if (!a2?.length) throw new Error("Please open MetaMask, unlock your wallet, and try again."); userAddress = a2[0]; }
-      userAddress = accounts[0];
-
-      const { BrowserProvider, parseEther } = await import("ethers");
-      try { await (window as any).ethereum.request({ method: "wallet_addEthereumChain", params: [{ chainId: "0x411D", chainName: "0G Mainnet", nativeCurrency: { name: "0G", symbol: "0G", decimals: 18 }, rpcUrls: ["https://evmrpc.0g.ai"], blockExplorerUrls: ["https://chainscan.0g.ai"] }] }); } catch (_) {}
-      try { await (window as any).ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x411D" }] }); } catch (_) {}
-
-      const provider = new BrowserProvider((window as any).ethereum);
-      const signer = await provider.getSigner();
-      const recipient = process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT_ADDRESS || "0x1ba840fb6fC2a1a9cd9880803d920228DCF919E9";
-      const tx = await signer.sendTransaction({ to: recipient, value: parseEther("0.01") });
-      await tx.wait();
-      txHash = tx.hash;
+      txHash = await walletClient.sendTransaction({
+        to: (process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT_ADDRESS || "0x1ba840fb6fC2a1a9cd9880803d920228DCF919E9") as `0x${string}`,
+        value: parseEther("0.01"),
+      });
     } catch (err: any) {
-      setTxError(err?.message?.slice(0, 100) || "Payment failed");
+      setTxError(err?.message?.includes("rejected") ? "Transaction rejected." : (err?.message?.slice(0, 100) || "Payment failed"));
       return;
     }
 
@@ -53,10 +45,10 @@ export default function ChatPage() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMsg.content, agentId, txHash, userAddress }),
+        body: JSON.stringify({ message: userMsg.content, agentId, txHash, userAddress: address }),
       });
       const data = await res.json();
-      setMessages(m => [...m, { role: "agent", content: data.reply, teeVerified: data.teeVerified, agentTx: data.agentTx }]);
+      setMessages(m => [...m, { role: "agent", content: data.reply, teeVerified: data.teeVerified }]);
     } catch {
       setMessages(m => [...m, { role: "agent", content: "Something went wrong. Please try again." }]);
     }
@@ -122,12 +114,7 @@ export default function ChatPage() {
             {messages.map((m, i) => (
               <div key={i} className={m.role === "user" ? "msg-user" : "msg-agent"}>
                 {m.content}
-                {m.role === "agent" && (
-                  <div className="msg-meta">
-                    {m.teeVerified && <span className="msg-tee">✓ TEE verified · </span>}
-                    0G Compute
-                  </div>
-                )}
+                {m.role === "agent" && <div className="msg-meta">{m.teeVerified && <span className="msg-tee">✓ TEE verified · </span>}0G Compute</div>}
               </div>
             ))}
             {loading && <div className="msg-agent">Thinking via 0G Compute...</div>}

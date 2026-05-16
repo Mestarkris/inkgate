@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { useAccount, useWalletClient } from "wagmi";
+import { parseEther } from "viem";
 import Layout from "../../components/Layout";
 
 export default function ArticlePage() {
@@ -10,41 +12,14 @@ export default function ArticlePage() {
   const [loading, setLoading] = useState(false);
   const [teaser, setTeaser] = useState("");
   const [error, setError] = useState("");
-  const [address, setAddress] = useState<string>("");
-  const [isConnected, setIsConnected] = useState(false);
+  const { address, isConnected } = useAccount();
+  const { data: walletClient } = useWalletClient();
 
   useEffect(() => {
     if (slug) {
       fetch(`/api/teaser/${slug}`).then(r => r.json()).then(d => setTeaser(d.teaser || "")).catch(() => {});
     }
-    // Auto-detect MetaMask on load and periodically
-    const detect = async () => {
-      if (!(window as any).ethereum) return;
-      try {
-        const accounts = await (window as any).ethereum.request({ method: "eth_accounts" });
-        if (accounts?.[0]) { setAddress(accounts[0]); setIsConnected(true); }
-      } catch {}
-    };
-    detect();
-    const interval = setInterval(detect, 1500);
-    if ((window as any).ethereum) {
-      (window as any).ethereum.on("accountsChanged", (accounts: string[]) => {
-        setAddress(accounts[0] || "");
-        setIsConnected(!!accounts[0]);
-      });
-    }
-    return () => clearInterval(interval);
   }, [slug]);
-
-  const connectWallet = async () => {
-    if (!(window as any).ethereum) { alert("Please install MetaMask"); return; }
-    try {
-      const accounts = await (window as any).ethereum.request({ method: "eth_requestAccounts" });
-      if (accounts?.[0]) { setAddress(accounts[0]); setIsConnected(true); }
-    } catch (e: any) {
-      setError(e?.message || "Failed to connect wallet");
-    }
-  };
 
   const unlock = async () => {
     setError("");
@@ -52,40 +27,12 @@ export default function ArticlePage() {
     try {
       let txHash = "";
 
-      if (isConnected && address) {
-        const { BrowserProvider, parseEther } = await import("ethers");
-
-        // Ensure accounts are accessible
-        await (window as any).ethereum.request({ method: "eth_requestAccounts" });
-
-        // Add 0G Mainnet
-        try {
-          await (window as any).ethereum.request({
-            method: "wallet_addEthereumChain",
-            params: [{
-              chainId: "0x411D",
-              chainName: "0G Mainnet",
-              nativeCurrency: { name: "0G", symbol: "0G", decimals: 18 },
-              rpcUrls: ["https://evmrpc.0g.ai"],
-              blockExplorerUrls: ["https://chainscan.0g.ai"],
-            }],
-          });
-        } catch (_) {}
-
-        // Switch to 0G Mainnet
-        try {
-          await (window as any).ethereum.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: "0x411D" }],
-          });
-        } catch (_) {}
-
-        const provider = new BrowserProvider((window as any).ethereum);
-        const signer = await provider.getSigner();
-        const recipient = process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT_ADDRESS || "0x1ba840fb6fC2a1a9cd9880803d920228DCF919E9";
-        const tx = await signer.sendTransaction({ to: recipient, value: parseEther("0.01") });
-        await tx.wait();
-        txHash = tx.hash;
+      if (isConnected && address && walletClient) {
+        const hash = await walletClient.sendTransaction({
+          to: (process.env.NEXT_PUBLIC_PAYMENT_RECIPIENT_ADDRESS || "0x1ba840fb6fC2a1a9cd9880803d920228DCF919E9") as `0x${string}`,
+          value: parseEther("0.01"),
+        });
+        txHash = hash;
       }
 
       const res = await fetch(`/api/article/${slug}`, {
@@ -101,7 +48,7 @@ export default function ArticlePage() {
         setArticle(data);
       }
     } catch (err: any) {
-      setError(err?.message?.includes("rejected") ? "Transaction rejected in MetaMask." : (err?.message?.slice(0, 120) || "Something went wrong"));
+      setError(err?.message?.includes("rejected") ? "Transaction rejected." : (err?.message?.slice(0, 120) || "Something went wrong"));
     }
     setLoading(false);
   };
@@ -142,7 +89,6 @@ export default function ArticlePage() {
         .proof-link:hover{text-decoration:underline}
         @media(max-width:768px){.article-body{padding:24px 0}.pipeline-visual{gap:4px}.pipe-badge{font-size:10px;padding:4px 8px}}
       `}</style>
-
       <div className="wrap">
         <div className="article-body">
           {!article ? (
@@ -167,13 +113,12 @@ export default function ArticlePage() {
                 </div>
               ) : (
                 <div className="wallet-info">
-                  <span style={{color:"var(--warn)"}}>⚠ No wallet connected ·</span>
-                  <button onClick={connectWallet} style={{background:"none",border:"none",color:"var(--accent)",cursor:"pointer",fontFamily:"var(--mono)",fontSize:12,textDecoration:"underline",padding:0}}>Connect MetaMask</button>
+                  <span style={{color:"var(--warn)"}}>⚠ Connect your wallet using the button in the top right to pay with MetaMask</span>
                 </div>
               )}
               {error && <div className="error-box">{error}</div>}
-              <button className="btn-primary" onClick={unlock} disabled={loading} style={{fontSize:15,padding:"14px 32px"}}>
-                {loading ? "Agents writing..." : isConnected ? "Unlock with MetaMask · 0.01 0G →" : "Unlock in demo mode →"}
+              <button className="btn-primary" onClick={unlock} disabled={loading || !isConnected} style={{fontSize:15,padding:"14px 32px"}}>
+                {loading ? "Agents writing..." : isConnected ? "Unlock with MetaMask · 0.01 0G →" : "Connect wallet to unlock →"}
               </button>
             </div>
           ) : (
